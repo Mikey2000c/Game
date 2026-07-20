@@ -18,6 +18,8 @@ type GameDef = {
   name: string;
   blurb: string;
   art: string;
+  image: string;
+  badge?: string;
   theme: Theme;
   symbols: GridSymbol[];
   note?: string;
@@ -41,6 +43,8 @@ const GAMES: GameDef[] = [
     name: "Platinum Pad Live",
     blurb: "5×3 console cabinet · trophies, portals, free spins",
     art: "art-console",
+    image: "/tiles/pad.jpg",
+    badge: "FEATURED",
     theme: "console",
     featured: true,
     note: "Original console theme — not affiliated with Sony or PlayStation.",
@@ -63,6 +67,8 @@ const GAMES: GameDef[] = [
     name: "Neon Orchard",
     blurb: "Fishin’-style fruit frenzy · scatters & free picks",
     art: "art-fruit",
+    image: "/tiles/orchard.jpg",
+    badge: "HOT",
     theme: "orchard",
     symbols: [
       { id: "fish", label: "FISH", color: "#339af0", accent: "#a5d8ff", glyph: "🐟" },
@@ -83,6 +89,8 @@ const GAMES: GameDef[] = [
     name: "Vault Rush",
     blurb: "5×3 vault trail · progressive jackpot bites",
     art: "art-vault",
+    image: "/tiles/vault.jpg",
+    badge: "JACKPOT",
     theme: "vault",
     symbols: [
       { id: "gem", label: "GEM", color: "#22b8cf", accent: "#c5f6fa", glyph: "💎" },
@@ -101,6 +109,8 @@ const GAMES: GameDef[] = [
     name: "Raid Spins",
     blurb: "Fast 5×3 storm · random multipliers",
     art: "art-raid",
+    image: "/tiles/raid.jpg",
+    badge: "NEW",
     theme: "raid",
     symbols: [
       { id: "fire", label: "FIRE", color: "#ff6b4a", accent: "#ffd8ce", glyph: "🔥" },
@@ -667,11 +677,14 @@ export default function App() {
                     <div className="game-rail">
                       {GAMES.map((g) => (
                         <button key={g.id} className="game-tile" onClick={() => openGame(g)}>
-                          <div className={`art ${g.art}`} />
-                          {g.featured && <span className="badge-live">FEATURED</span>}
+                          <img className="tile-img" src={g.image} alt="" loading="lazy" />
+                          <div className={`art ${g.art}`} aria-hidden />
+                          <span className="tile-shine" aria-hidden />
+                          {g.badge && <span className={`badge-live badge-${g.badge.toLowerCase()}`}>{g.badge}</span>}
                           <div className="meta">
                             <strong>{g.name}</strong>
                             <span>{g.blurb}</span>
+                            <em className="play-chip">PLAY</em>
                           </div>
                         </button>
                       ))}
@@ -711,15 +724,18 @@ export default function App() {
                       {GAMES.map((g) => (
                         <button
                           key={g.id}
-                          className="game-tile"
-                          style={{ minHeight: 148, width: "100%" }}
+                          className="game-tile game-tile-wide"
+                          style={{ minHeight: 168, width: "100%" }}
                           onClick={() => openGame(g)}
                         >
-                          <div className={`art ${g.art}`} />
-                          {g.featured && <span className="badge-live">FEATURED</span>}
+                          <img className="tile-img" src={g.image} alt="" loading="lazy" />
+                          <div className={`art ${g.art}`} aria-hidden />
+                          <span className="tile-shine" aria-hidden />
+                          {g.badge && <span className={`badge-live badge-${g.badge.toLowerCase()}`}>{g.badge}</span>}
                           <div className="meta">
                             <strong>{g.name}</strong>
                             <span>{g.blurb}</span>
+                            <em className="play-chip">PLAY</em>
                           </div>
                         </button>
                       ))}
