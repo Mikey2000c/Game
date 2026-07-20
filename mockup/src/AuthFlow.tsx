@@ -1,17 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { api, setToken, type ApiUser } from "./api";
 import { sfx } from "./audio";
-
-export type AuthUser = {
-  name: string;
-  email: string;
-  method: "apple" | "google" | "email" | "guest";
-};
 
 type Step = "splash" | "welcome" | "login" | "signup";
 
 type Props = {
-  onAuthenticated: (user: AuthUser) => void;
+  onAuthenticated: (user: ApiUser) => void;
   soundOn?: boolean;
 };
 
@@ -22,10 +17,22 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
 
   function beep(fn: () => void) {
     if (soundOn) fn();
   }
+
+  useEffect(() => {
+    api
+      .health()
+      .then((h) => {
+        setApiOnline(true);
+        setGoogleEnabled(h.googleAuth);
+      })
+      .catch(() => setApiOnline(false));
+  }, []);
 
   function go(next: Step) {
     beep(sfx.click);
@@ -33,13 +40,25 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
     setStep(next);
   }
 
-  function finish(user: AuthUser) {
+  async function finish(run: () => Promise<{ token: string; user: ApiUser }>) {
+    if (apiOnline === false) {
+      setError("API offline — start server with: cd server && npm run dev");
+      beep(sfx.lose);
+      return;
+    }
     setBusy(true);
-    beep(sfx.claim);
-    window.setTimeout(() => {
+    setError(null);
+    try {
+      const res = await run();
+      setToken(res.token);
+      beep(sfx.claim);
+      onAuthenticated(res.user);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Sign-in failed");
+      beep(sfx.lose);
+    } finally {
       setBusy(false);
-      onAuthenticated(user);
-    }, 650);
+    }
   }
 
   function submitEmail(mode: "login" | "signup") {
@@ -53,11 +72,7 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
       beep(sfx.lose);
       return;
     }
-    finish({
-      name: mode === "signup" ? name.trim() : email.split("@")[0] || "Player",
-      email: email.trim(),
-      method: "email",
-    });
+    void finish(() => api.authEmail(email.trim(), name.trim() || undefined, mode));
   }
 
   return (
@@ -65,6 +80,12 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
       <div className="auth-aurora" aria-hidden />
       <div className="auth-orb auth-orb-a" aria-hidden />
       <div className="auth-orb auth-orb-b" aria-hidden />
+
+      {apiOnline !== null && (
+        <div className={`api-pill${apiOnline ? " on" : ""}`}>
+          {apiOnline ? "API online" : "API offline"}
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {step === "splash" && (
@@ -76,13 +97,13 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.45 }}
             onAnimationComplete={() => {
-              window.setTimeout(() => setStep("welcome"), 1100);
+              window.setTimeout(() => setStep("welcome"), 900);
             }}
           >
             <motion.div
               className="auth-crest xl"
               animate={{ rotate: [0, 8, -6, 0], scale: [1, 1.04, 1] }}
-              transition={{ duration: 1.4, ease: "easeInOut" }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
             >
               <span>SK</span>
             </motion.div>
@@ -109,22 +130,21 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
             <p className="auth-kicker">Welcome to</p>
             <h1>SpinKeep</h1>
             <p className="auth-lead">
-              Claim daily bonuses, spin premium cabinets, gift friends, and climb
-              with your clan.
+              Local API accounts, Google-ready login, daily bonuses, and live 5×3 cabinets.
             </p>
 
             <div className="auth-feature-row">
               <div className="auth-feature">
                 <b>Daily</b>
-                <span>Streak drops</span>
-              </div>
-              <div className="auth-feature">
-                <b>Clans</b>
-                <span>Shared chests</span>
+                <span>Server streak</span>
               </div>
               <div className="auth-feature">
                 <b>Spins</b>
-                <span>5×3 live</span>
+                <span>Server RNG</span>
+              </div>
+              <div className="auth-feature">
+                <b>Google</b>
+                <span>{googleEnabled ? "Live" : "Demo"}</span>
               </div>
             </div>
 
@@ -136,9 +156,8 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
             </button>
             <button
               className="auth-guest"
-              onClick={() =>
-                finish({ name: "Guest Player", email: "guest@spinkeep.local", method: "guest" })
-              }
+              disabled={busy}
+              onClick={() => void finish(() => api.authGuest())}
             >
               Continue as guest
             </button>
@@ -160,24 +179,24 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
             <h2>{step === "login" ? "Welcome back" : "Join SpinKeep"}</h2>
             <p className="auth-sub">
               {step === "login"
-                ? "Pick up your streak, gifts, and clan."
-                : "One account across iOS & Android."}
+                ? "Your balance and streak sync from the local API."
+                : "Creates a real account in the local server database."}
             </p>
 
             <div className="social-col">
               <button
-                className="social-btn apple"
-                disabled={busy}
-                onClick={() => finish({ name: "Alex", email: "alex@icloud.com", method: "apple" })}
-              >
-                <span className="sico"></span> Continue with Apple
-              </button>
-              <button
                 className="social-btn google"
                 disabled={busy}
-                onClick={() => finish({ name: "Jordan", email: "jordan@gmail.com", method: "google" })}
+                onClick={() =>
+                  void finish(() =>
+                    googleEnabled
+                      ? Promise.reject(new Error("Add GIS button wiring with your Client ID"))
+                      : api.authGoogleDemo(name || "Google Player", email || undefined),
+                  )
+                }
               >
-                <span className="sico g">G</span> Continue with Google
+                <span className="sico g">G</span>
+                {googleEnabled ? "Continue with Google" : "Continue with Google (demo)"}
               </button>
             </div>
 
@@ -232,13 +251,11 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
             <p className="auth-switch">
               {step === "login" ? (
                 <>
-                  New here?{" "}
-                  <button onClick={() => go("signup")}>Create an account</button>
+                  New here? <button onClick={() => go("signup")}>Create an account</button>
                 </>
               ) : (
                 <>
-                  Already spinning?{" "}
-                  <button onClick={() => go("login")}>Log in</button>
+                  Already spinning? <button onClick={() => go("login")}>Log in</button>
                 </>
               )}
             </p>

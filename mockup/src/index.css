@@ -1096,6 +1096,27 @@ button.brand-mark:active { transform: scale(0.98); }
 }
 .auth-guest:hover { color: var(--ink); }
 
+.api-pill {
+  position: absolute;
+  top: 44px;
+  right: 14px;
+  z-index: 2;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(255, 90, 61, 0.2);
+  color: #ffb09e;
+  border: 1px solid rgba(255, 90, 61, 0.35);
+}
+.api-pill.on {
+  background: rgba(61, 214, 195, 0.15);
+  color: #3dd6c3;
+  border-color: rgba(61, 214, 195, 0.35);
+}
+
 .auth-back {
   color: #9ec0ff;
   font-size: 0.8rem;

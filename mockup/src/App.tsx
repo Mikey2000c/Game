@@ -3,11 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   SlotMachine,
   buildGrid,
-  forceFeatureGrid,
-  cellKey,
   type GridSymbol,
 } from "./SlotMachine";
-import { AuthFlow, type AuthUser } from "./AuthFlow";
+import { AuthFlow } from "./AuthFlow";
+import { api, getToken, setToken, type ApiUser } from "./api";
 import { sfx } from "./audio";
 import "./index.css";
 
@@ -151,12 +150,15 @@ function formatTokens(n: number) {
 }
 
 export default function App() {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<ApiUser | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [tab, setTab] = useState<Tab>("home");
   const [tokens, setTokens] = useState(12840);
   const [claimed, setClaimed] = useState(false);
   const [showBonus, setShowBonus] = useState(false);
+  const [level, setLevel] = useState(1);
+  const [xp, setXp] = useState(0);
+  const [streakDay, setStreakDay] = useState(1);
   const [activeGame, setActiveGame] = useState<GameDef | null>(null);
   const [grid, setGrid] = useState<GridSymbol[][]>([]);
   const [spinning, setSpinning] = useState(false);
@@ -171,8 +173,6 @@ export default function App() {
   const [bonusPicks, setBonusPicks] = useState<(number | null)[]>(Array(9).fill(null));
   const [bonusDone, setBonusDone] = useState(false);
   const [jackpot, setJackpot] = useState(248_560);
-  const [xp, setXp] = useState(62);
-  const [level, setLevel] = useState(14);
   const [freeSpins, setFreeSpins] = useState(0);
   const [spinCount, setSpinCount] = useState(0);
   const [combo, setCombo] = useState(0);
@@ -184,12 +184,33 @@ export default function App() {
     { id: "m3", title: "Boost believer", detail: "Win with Bet Boost on", progress: 0, target: 1, reward: 250 },
   ]);
 
-  const streakDay = 4;
   const dailyReward = 500 + (streakDay - 1) * 100;
   const bet = BET_STEPS[betIndex] ?? 0.5;
   const totalBet = bet * (betBoost ? 2 : 1);
-  const stakeTokens = Math.round(totalBet * 100); // map £-style bet to token cost
+  const stakeTokens = Math.round(totalBet * 100);
   const xpPct = Math.min(100, xp);
+
+  function applyUser(u: ApiUser) {
+    setUser(u);
+    setTokens(u.tokens);
+    setLevel(u.level);
+    setXp(u.xp);
+    setStreakDay(u.streakDay);
+    const today = new Date().toISOString().slice(0, 10);
+    setClaimed(u.lastDailyClaim === today);
+  }
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+    api
+      .me()
+      .then((res) => {
+        applyUser(res.user);
+        setShowBonus(res.user.lastDailyClaim !== new Date().toISOString().slice(0, 10));
+      })
+      .catch(() => setToken(null));
+  }, []);
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -234,40 +255,42 @@ export default function App() {
     );
   }
 
-  function addXp(amount: number) {
-    setXp((v) => {
-      const next = v + amount;
-      if (next >= 100) {
-        setLevel((l) => l + 1);
-        setToast("Level up! Keep perks unlocked");
-        beep(sfx.winBig);
-        return next - 100;
-      }
-      return next;
-    });
-  }
-
   function unlockTrophy(id: string) {
     setUnlocked((u) => (u.includes(id) ? u : [...u, id]));
   }
 
   function claimDaily() {
     if (claimed) return;
-    beep(sfx.claim);
-    setTokens((v) => v + dailyReward);
-    setClaimed(true);
-    setShowBonus(false);
-    setToast(`+${dailyReward} daily tokens claimed`);
+    void (async () => {
+      try {
+        const res = await api.claimDaily();
+        applyUser(res.user);
+        setShowBonus(false);
+        beep(sfx.claim);
+        setToast(`+${res.reward} daily tokens claimed`);
+      } catch (e) {
+        setToast(e instanceof Error ? e.message : "Claim failed");
+        beep(sfx.lose);
+      }
+    })();
   }
 
   function sendGift(amount: number, name: string) {
-    if (tokens < amount) {
-      setToast("Not enough tokens");
-      return;
-    }
-    beep(sfx.click);
-    setTokens((v) => v - amount);
-    setToast(`Gifted ${amount} to ${name}`);
+    const emailMap: Record<string, string> = {
+      Maya: "maya@spinkeep.local",
+      Rex: "rex@spinkeep.local",
+      Jules: "jules@spinkeep.local",
+    };
+    void (async () => {
+      try {
+        const res = await api.gift(emailMap[name] || `${name.toLowerCase()}@spinkeep.local`, amount);
+        applyUser(res.user);
+        beep(sfx.click);
+        setToast(`Gifted ${amount} to ${name}`);
+      } catch (e) {
+        setToast(e instanceof Error ? e.message : "Gift failed");
+      }
+    })();
   }
 
   function openGame(g: GameDef) {
@@ -321,43 +344,17 @@ export default function App() {
     }
   }
 
-  function evaluate(final: GridSymbol[][], game: GameDef) {
-    const wins = new Set<string>();
-    let payout = 0;
-
-    // middle-row line + any matching pairs across adjacent reels
-    for (let row = 0; row < 3; row++) {
-      const line = final.map((col) => col[row]!);
-      let run = 1;
-      let base = line[0]!;
-      for (let i = 1; i < 5; i++) {
-        const cur = line[i]!;
+  function mapServerGrid(game: GameDef, raw: { id: string; kind: string }[][]): GridSymbol[][] {
+    return raw.map((col) =>
+      col.map((cell) => {
         const match =
-          cur.id === base.id || cur.kind === "wild" || base.kind === "wild";
-        if (match) {
-          run += 1;
-        } else {
-          break;
-        }
-      }
-      if (run >= 3) {
-        for (let c = 0; c < run; c++) wins.add(cellKey(c, row));
-        payout += stakeTokens * (run === 5 ? 20 : run === 4 ? 8 : 3);
-      }
-    }
-
-    // scatter count anywhere
-    let scatters = 0;
-    final.forEach((col, c) =>
-      col.forEach((sym, r) => {
-        if (sym.kind === "scatter" || sym.kind === "bonus") {
-          scatters += 1;
-          wins.add(cellKey(c, r));
-        }
+          game.symbols.find((s) => s.id === cell.id) ||
+          game.symbols.find((s) => s.kind === cell.kind) ||
+          game.symbols.find((s) => s.label.toLowerCase().includes(cell.id)) ||
+          game.symbols[0]!;
+        return match;
       }),
     );
-
-    return { wins, payout, scatters, game };
   }
 
   function spin() {
@@ -372,70 +369,66 @@ export default function App() {
     setWinCells(new Set());
     setMessage("Good Luck!");
     setBigWin(null);
-
-    if (freeSpins > 0) setFreeSpins((f) => f - 1);
-    else setTokens((v) => v - stakeTokens);
-
     setSpinCount((c) => c + 1);
     bumpMission("m1");
-    addXp(betBoost ? 8 : 5);
 
-    window.setTimeout(() => finishSpin(activeGame), 1100);
-  }
+    void (async () => {
+      try {
+        // animate locally while server resolves
+        const anim = window.setInterval(() => {
+          setGrid(buildGrid(activeGame.symbols));
+        }, 70);
 
-  function finishSpin(game: GameDef) {
-    const force = Math.random() < (betBoost ? 0.3 : 0.15);
-    const final = force
-      ? forceFeatureGrid(game.symbols, Math.random() < 0.5 ? "scatter" : "bonus")
-      : buildGrid(game.symbols);
+        const res = await api.spin(stakeTokens, betBoost, activeGame.id);
+        window.clearInterval(anim);
 
-    setGrid(final);
-    setSpinning(false);
-    beep(sfx.reelStop);
+        const final = mapServerGrid(activeGame, res.grid);
+        setGrid(final);
+        setSpinning(false);
+        applyUser(res.user);
+        beep(sfx.reelStop);
 
-    const { wins, payout, scatters } = evaluate(final, game);
-    const randomFeature = Math.random() < (betBoost ? 0.12 : 0.06);
+        if (freeSpins > 0) setFreeSpins((f) => Math.max(0, f - 1));
 
-    if (scatters >= 3) {
-      setWinCells(wins);
-      setMessage(`${scatters} SCATTERS! Feature unlocked`);
-      setCombo((c) => c + 1);
-      beep(sfx.winBig);
-      const kind =
-        game.id === "console" ? "pad" : game.id === "vault" ? "heist" : game.id === "raid" ? "storm" : "scatter";
-      setTimeout(() => startBonus(kind), 500);
-      return;
-    }
+        if (res.feature || res.scatters >= 3) {
+          setWinCells(new Set(res.wins));
+          setMessage(`${res.scatters} SCATTERS! Feature unlocked`);
+          setCombo((c) => c + 1);
+          beep(sfx.winBig);
+          const kind =
+            activeGame.id === "console"
+              ? "pad"
+              : activeGame.id === "vault"
+                ? "heist"
+                : activeGame.id === "raid"
+                  ? "storm"
+                  : "scatter";
+          setTimeout(() => startBonus(kind), 500);
+          return;
+        }
 
-    if (randomFeature) {
-      setMessage("RANDOM FEATURE!");
-      setCombo((c) => c + 1);
-      setTimeout(
-        () => startBonus(game.id === "raid" ? "storm" : game.id === "console" ? "pad" : "scatter"),
-        400,
-      );
-      return;
-    }
+        if (res.payout > 0) {
+          setWinCells(new Set(res.wins));
+          setMessage(`WIN ${res.payout}!`);
+          setCombo((c) => c + 1);
+          beep(res.payout >= stakeTokens * 8 ? sfx.winBig : sfx.winSmall);
+          if (betBoost) bumpMission("m3");
+          if (res.payout >= stakeTokens * 8) {
+            setBigWin(res.payout);
+            unlockTrophy("silver");
+          }
+          return;
+        }
 
-    if (payout > 0) {
-      const withCombo = Math.round(payout * (1 + combo * 0.12));
-      setTokens((v) => v + withCombo);
-      setWinCells(wins);
-      setMessage(`WIN ${withCombo.toFixed(0)}!`);
-      setCombo((c) => c + 1);
-      beep(withCombo >= stakeTokens * 8 ? sfx.winBig : sfx.winSmall);
-      if (betBoost) bumpMission("m3");
-      if (withCombo >= stakeTokens * 8) {
-        setBigWin(withCombo);
-        unlockTrophy("silver");
+        setCombo(0);
+        setMessage("Good Luck!");
+        beep(sfx.lose);
+      } catch (e) {
+        setSpinning(false);
+        setToast(e instanceof Error ? e.message : "Spin failed");
+        beep(sfx.lose);
       }
-      if (wins.size >= 5) unlockTrophy("gold");
-      return;
-    }
-
-    setCombo(0);
-    setMessage(freeSpins > 0 ? "Free spin — try again!" : "Good Luck!");
-    beep(sfx.lose);
+    })();
   }
 
   return (
@@ -455,8 +448,8 @@ export default function App() {
             <AuthFlow
               soundOn={soundOn}
               onAuthenticated={(u) => {
-                setUser(u);
-                setShowBonus(true);
+                applyUser(u);
+                setShowBonus(u.lastDailyClaim !== new Date().toISOString().slice(0, 10));
                 setToast(`Welcome, ${u.name}`);
               }}
             />
@@ -957,6 +950,7 @@ export default function App() {
                       onClick={() => {
                         beep(sfx.click);
                         setShowProfile(false);
+                        setToken(null);
                         setUser(null);
                         setActiveGame(null);
                         setShowBonus(false);
