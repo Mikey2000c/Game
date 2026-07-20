@@ -23,3 +23,5 @@ npm run dev:web    # http://127.0.0.1:5173 — proxies /api → :8787
 - Google Sign-In works in **demo mode** without `GOOGLE_CLIENT_ID`. Email password is not verified yet (local find-or-create).
 - Data persists in `server/data/db.json` (created on first write).
 - `SlotScene.tsx` (Three.js) is unused; live cabinets use `SlotMachine.tsx`.
+- Reels use **strip physics** (staggered L→R stop, bounce, reel-5 anticipation). Parent must bump `landToken` when the server result is ready, then handle `onReelsLanded`.
+- Free spins: wilds **collect money symbols** server-side. Mini-games in `BonusGames.tsx` only award free-spin counts (no local token minting).
