@@ -17,7 +17,11 @@ Players open the app every day for the streak claim, spin a few rounds, gift fri
 | Progression | Player level + Keep tier (cosmetic + soft perks) |
 | Later IAP | Buy token packs when soft currency runs low |
 
-## Visual direction (latest)
+### Accounts (mock)
+
+Splash → welcome → **Apple / Google / email / guest** login.
+Profile sheet from avatar (level, tokens, sign-in method, log out).
+Real auth comes later with Expo + Supabase/Firebase.
 
 Premium **UK social-casino** gloss (Sky Vegas / Coral / BetVictor energy):
 chrome bezels, LED chase lights, progressive jackpot ticker, coral CTAs,

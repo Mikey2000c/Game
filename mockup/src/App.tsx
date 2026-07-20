@@ -7,6 +7,7 @@ import {
   cellKey,
   type GridSymbol,
 } from "./SlotMachine";
+import { AuthFlow, type AuthUser } from "./AuthFlow";
 import { sfx } from "./audio";
 import "./index.css";
 
@@ -150,10 +151,12 @@ function formatTokens(n: number) {
 }
 
 export default function App() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
   const [tab, setTab] = useState<Tab>("home");
   const [tokens, setTokens] = useState(12840);
   const [claimed, setClaimed] = useState(false);
-  const [showBonus, setShowBonus] = useState(true);
+  const [showBonus, setShowBonus] = useState(false);
   const [activeGame, setActiveGame] = useState<GameDef | null>(null);
   const [grid, setGrid] = useState<GridSymbol[][]>([]);
   const [spinning, setSpinning] = useState(false);
@@ -440,14 +443,24 @@ export default function App() {
       <div className="stage-label">
         <h1>SpinKeep</h1>
         <p>
-          Mobile 5×3 video slots — Fishin’ Frenzy–style layout, premium UK casino
-          gloss, Platinum Pad Live console cabinet (original art).
+          Polished mobile social casino mockup — login, 5×3 slots, clans, gifts,
+          and daily hooks.
         </p>
       </div>
 
       <div className="phone-shell">
         <div className="phone-notch" />
         <div className="phone-screen">
+          {!user ? (
+            <AuthFlow
+              soundOn={soundOn}
+              onAuthenticated={(u) => {
+                setUser(u);
+                setShowBonus(true);
+                setToast(`Welcome, ${u.name}`);
+              }}
+            />
+          ) : (
           <div className="app">
             <div className="status-bar">
               <span>9:41</span>
@@ -455,15 +468,21 @@ export default function App() {
             </div>
 
             <header className="top-bar">
-              <div className="brand-mark">
+              <button
+                className="brand-mark"
+                onClick={() => {
+                  beep(sfx.click);
+                  setShowProfile(true);
+                }}
+              >
                 <div className="crest" aria-hidden>
-                  <span>SK</span>
+                  <span>{user.name.slice(0, 1).toUpperCase()}</span>
                 </div>
                 <div>
-                  <strong>SpinKeep</strong>
+                  <strong>{user.name}</strong>
                   <small>Lvl {level} · Gold Keep</small>
                 </div>
-              </div>
+              </button>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <button
                   className={`chip${soundOn ? " gold" : " hot"}`}
@@ -882,14 +901,83 @@ export default function App() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <AnimatePresence>
+              {showProfile && (
+                <motion.div
+                  className="modal-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowProfile(false)}
+                >
+                  <motion.div
+                    className="modal profile-modal"
+                    initial={{ y: 40, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 24, opacity: 0 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="profile-head">
+                      <div className="crest xl">
+                        <span>{user.name.slice(0, 1).toUpperCase()}</span>
+                      </div>
+                      <div>
+                        <h2>{user.name}</h2>
+                        <p>{user.email}</p>
+                      </div>
+                    </div>
+                    <div className="stat-strip">
+                      <div className="stat">
+                        <b>{level}</b>
+                        <span>Level</span>
+                      </div>
+                      <div className="stat">
+                        <b>{formatTokens(tokens)}</b>
+                        <span>Tokens</span>
+                      </div>
+                      <div className="stat">
+                        <b>{user.method}</b>
+                        <span>Sign-in</span>
+                      </div>
+                    </div>
+                    <button
+                      className="btn btn-ghost"
+                      style={{ width: "100%", marginBottom: 8 }}
+                      onClick={() => {
+                        setShowProfile(false);
+                        setToast("Settings coming in full build");
+                      }}
+                    >
+                      Account settings
+                    </button>
+                    <button
+                      className="btn btn-accent"
+                      style={{ width: "100%" }}
+                      onClick={() => {
+                        beep(sfx.click);
+                        setShowProfile(false);
+                        setUser(null);
+                        setActiveGame(null);
+                        setShowBonus(false);
+                        setTab("home");
+                      }}
+                    >
+                      Log out
+                    </button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+          )}
         </div>
       </div>
 
       <div className="legend">
-        <span>5×3 mobile video slots</span>
-        <span>Fishin’ Frenzy layout</span>
-        <span>Bet · Spin · Boost</span>
+        <span>Login · Apple / Google / email</span>
+        <span>5×3 mobile slots</span>
+        <span>Polished UI</span>
       </div>
     </div>
   );
