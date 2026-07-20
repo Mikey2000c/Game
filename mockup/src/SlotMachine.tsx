@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { SymbolIcon } from "./SymbolIcons";
 
 export type GridSymbol = {
   id: string;
@@ -115,7 +116,7 @@ export function SlotMachine({
                     }
                   >
                     <div className="vsym-face">
-                      <span className="vsym-glyph">{sym.glyph}</span>
+                      <SymbolIcon id={sym.id} />
                       <span className="vsym-label">{sym.label}</span>
                       {sym.kind && sym.kind !== "normal" && (
                         <span className="vsym-tag">{sym.kind}</span>

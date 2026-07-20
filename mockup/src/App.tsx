@@ -10,7 +10,7 @@ import { api, getToken, setToken, type ApiUser } from "./api";
 import { sfx } from "./audio";
 import "./index.css";
 
-type Tab = "home" | "games" | "clan" | "social";
+type Tab = "home" | "slots" | "clan" | "account";
 type Theme = "orchard" | "vault" | "console" | "raid";
 
 type GameDef = {
@@ -238,10 +238,10 @@ export default function App() {
   const nav = useMemo(
     () =>
       [
-        { id: "home" as const, label: "Keep", ico: "⌂" },
-        { id: "games" as const, label: "Spins", ico: "◎" },
+        { id: "home" as const, label: "Home", ico: "⌂" },
+        { id: "slots" as const, label: "Slots", ico: "◎" },
         { id: "clan" as const, label: "Clan", ico: "⚑" },
-        { id: "social" as const, label: "Gifts", ico: "✦" },
+        { id: "account" as const, label: "Account", ico: "◉" },
       ] as const,
     [],
   );
@@ -475,7 +475,7 @@ export default function App() {
                 className="brand-mark"
                 onClick={() => {
                   beep(sfx.click);
-                  setShowProfile(true);
+                  setTab("account");
                 }}
               >
                 <div className="crest" aria-hidden>
@@ -672,7 +672,7 @@ export default function App() {
 
                     <div className="section-head">
                       <h3>Featured floor</h3>
-                      <button onClick={() => setTab("games")}>All games</button>
+                      <button onClick={() => setTab("slots")}>All slots</button>
                     </div>
                     <div className="game-rail">
                       {GAMES.map((g) => (
@@ -692,7 +692,7 @@ export default function App() {
 
                     <div className="section-head">
                       <h3>Keep activity</h3>
-                      <button onClick={() => setTab("social")}>Gifts</button>
+                      <button onClick={() => setTab("account")}>Account</button>
                     </div>
                     <div className="feed">
                       {FEED.map((f) => (
@@ -710,16 +710,16 @@ export default function App() {
                       ))}
                     </div>
                   </motion.div>
-                ) : tab === "games" ? (
+                ) : tab === "slots" ? (
                   <motion.div
-                    key="games"
+                    key="slots"
                     className="screen-pad"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                   >
-                    <h2 className="page-title">Spin floor</h2>
-                    <p className="page-sub">Mobile 5×3 cabinets — tap in and spin.</p>
+                    <h2 className="page-title">Slots</h2>
+                    <p className="page-sub">Premium 5×3 cabinets — tap a tile and spin.</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                       {GAMES.map((g) => (
                         <button
@@ -771,14 +771,89 @@ export default function App() {
                   </motion.div>
                 ) : (
                   <motion.div
-                    key="social"
-                    className="screen-pad"
+                    key="account"
+                    className="screen-pad account-page"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                   >
-                    <h2 className="page-title">Friends & gifts</h2>
-                    <p className="page-sub">Gift tokens → pull friends online.</p>
+                    <h2 className="page-title">Account</h2>
+                    <p className="page-sub">Profile, wallet, preferences, and gifts.</p>
+
+                    <div className="account-hero">
+                      <div className="crest xl">
+                        <span>{user.name.slice(0, 1).toUpperCase()}</span>
+                      </div>
+                      <div>
+                        <strong>{user.name}</strong>
+                        <small>{user.email}</small>
+                        <span className="chip gold" style={{ marginTop: 6 }}>
+                          Gold Keep · Lvl {level}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="account-card">
+                      <div className="account-row">
+                        <div>
+                          <strong>Sign-in method</strong>
+                          <span>{user.method}</span>
+                        </div>
+                        <button className="linkish" onClick={() => setToast("Manage sign-in in full build")}>
+                          Manage
+                        </button>
+                      </div>
+                      <div className="account-row">
+                        <div>
+                          <strong>Token balance</strong>
+                          <span>{formatTokens(tokens)} tokens</span>
+                        </div>
+                        <button className="btn btn-primary" style={{ padding: "8px 12px" }} onClick={() => setToast("Shop comes in phase 2")}>
+                          Get coins
+                        </button>
+                      </div>
+                      <div className="account-row">
+                        <div style={{ flex: 1 }}>
+                          <strong>Level & XP</strong>
+                          <span>
+                            Lvl {level} · {xp}/100 XP
+                          </span>
+                          <div className="xp-bar" style={{ marginTop: 8 }}>
+                            <i style={{ width: `${xpPct}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="account-card">
+                      <div className="account-row">
+                        <div>
+                          <strong>Game SFX</strong>
+                          <span>{soundOn ? "On" : "Muted"}</span>
+                        </div>
+                        <button
+                          className={`switch${soundOn ? " on" : ""}`}
+                          onClick={() => {
+                            setSoundOn((v) => !v);
+                            if (!soundOn) sfx.unlock();
+                          }}
+                          aria-label="Toggle sound"
+                        >
+                          <i />
+                        </button>
+                      </div>
+                      <div className="account-row dim">
+                        <div>
+                          <strong>Notifications</strong>
+                          <span>Coming soon</span>
+                        </div>
+                        <span className="chip">Soon</span>
+                      </div>
+                    </div>
+
+                    <div className="section-head">
+                      <h3>Send gifts</h3>
+                    </div>
                     <div className="gift-list">
                       {FRIENDS.map((f) => (
                         <div className="gift-row" key={f.id}>
@@ -801,6 +876,33 @@ export default function App() {
                         </div>
                       ))}
                     </div>
+
+                    <div className="account-card" style={{ marginTop: 14 }}>
+                      <button className="account-link" onClick={() => setToast("Privacy policy placeholder")}>
+                        Privacy policy
+                      </button>
+                      <button className="account-link" onClick={() => setToast("Terms placeholder")}>
+                        Terms & conditions
+                      </button>
+                      <button className="account-link" onClick={() => setToast("Support placeholder")}>
+                        Help & support
+                      </button>
+                    </div>
+
+                    <button
+                      className="btn btn-accent"
+                      style={{ width: "100%", marginTop: 12 }}
+                      onClick={() => {
+                        beep(sfx.click);
+                        setToken(null);
+                        setUser(null);
+                        setActiveGame(null);
+                        setShowBonus(false);
+                        setTab("home");
+                      }}
+                    >
+                      Log out
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
