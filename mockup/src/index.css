@@ -551,6 +551,328 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
   font-size: 0.7rem; color: var(--ink-dim); line-height: 1.35; font-weight: 600;
 }
 
+/* —— Fishin' Frenzy–style 5×3 video slot (mobile) —— */
+.vslot {
+  border-radius: 18px;
+  padding: 10px 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.25), 0 16px 32px rgba(0, 0, 0, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+.vslot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.95;
+}
+.theme-orchard {
+  background: linear-gradient(180deg, #143a6b 0%, #0a2448 40%, #061830 100%);
+}
+.theme-orchard::before {
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -10%, rgba(120, 200, 255, 0.35), transparent 55%),
+    radial-gradient(circle at 15% 80%, rgba(20, 80, 40, 0.45), transparent 30%),
+    radial-gradient(circle at 85% 75%, rgba(10, 60, 90, 0.5), transparent 28%);
+}
+.theme-console {
+  background: linear-gradient(180deg, #1a3a8a 0%, #0c1c48 45%, #060e28 100%);
+}
+.theme-console::before {
+  background:
+    radial-gradient(ellipse 70% 35% at 50% 0%, rgba(140, 180, 255, 0.4), transparent 50%),
+    radial-gradient(circle at 20% 90%, rgba(40, 80, 200, 0.35), transparent 30%);
+}
+.theme-vault {
+  background: linear-gradient(180deg, #0a3d32 0%, #062820 50%, #041820 100%);
+}
+.theme-vault::before {
+  background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(61, 214, 195, 0.3), transparent 50%);
+}
+.theme-raid {
+  background: linear-gradient(180deg, #4a1418 0%, #2a0c14 50%, #140810 100%);
+}
+.theme-raid::before {
+  background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255, 90, 61, 0.28), transparent 50%);
+}
+
+.vslot > * { position: relative; z-index: 1; }
+
+.vslot-title {
+  text-align: center;
+  margin-bottom: 8px;
+  padding: 4px 8px 2px;
+}
+.vslot-title h2 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  background: linear-gradient(180deg, #ffe08a, #ff922b 55%, #e8590c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35));
+  text-transform: uppercase;
+}
+.vslot-title p {
+  margin-top: 4px;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.vslot-stage {
+  display: grid;
+  grid-template-columns: 18px 1fr 18px;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.payline-rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 2px;
+}
+.payline-rail span {
+  display: grid;
+  place-items: center;
+  height: 14px;
+  border-radius: 3px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.vslot-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  padding: 6px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.55));
+  border: 2px solid rgba(255, 220, 140, 0.35);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 24px rgba(0, 0, 0, 0.35);
+}
+.vslot-grid.spinning .vsym-face {
+  filter: blur(1.2px) brightness(1.05);
+}
+.vslot-col {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+  min-height: 210px;
+}
+
+.vsym {
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--c2), var(--c1) 55%, #0d1020);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.25),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.vsym.win {
+  box-shadow:
+    0 0 0 2px #ffe08a,
+    0 0 18px rgba(255, 200, 80, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: vwin 0.55s ease-in-out infinite alternate;
+}
+@keyframes vwin {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+.vsym.kind-scatter {
+  background: linear-gradient(160deg, #ffe8a3, #ff922b 50%, #d9480f);
+}
+.vsym.kind-bonus {
+  background: linear-gradient(160deg, #d0bfff, #7950f2 55%, #3b1d8f);
+}
+.vsym.kind-wild {
+  background: linear-gradient(160deg, #c3fae8, #20c997 55%, #087f5b);
+}
+.vsym-face {
+  height: 100%;
+  min-height: 62px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 2px;
+}
+.vsym-glyph {
+  font-size: 1.35rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+.vsym-label {
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  text-transform: uppercase;
+}
+.vsym-tag {
+  font-size: 0.45rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff8e0;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1px 4px;
+  border-radius: 4px;
+  margin-top: 1px;
+}
+
+.vslot-msg {
+  text-align: center;
+  margin: 8px 0 6px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #ffe8a3;
+  text-shadow: 0 0 12px rgba(255, 180, 60, 0.35);
+  min-height: 1.2em;
+}
+
+.vslot-meter {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 10px;
+}
+.vslot-meter div { text-align: center; }
+.vslot-meter small {
+  display: block;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: #9aa4b5;
+  font-weight: 700;
+}
+.vslot-meter b {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.86rem;
+  color: #fff;
+}
+
+.vslot-controls {
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  gap: 10px;
+  align-items: center;
+}
+
+.bet-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.bet-arrow {
+  width: 36px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #5b8cff, #3b5bdb);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(59, 91, 219, 0.35);
+}
+.bet-orb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  background: radial-gradient(circle at 35% 30%, #7ea0ff, #1c3faa 60%, #0b1f66);
+  border: 3px solid rgba(180, 210, 255, 0.55);
+  box-shadow: 0 8px 18px rgba(20, 60, 180, 0.4);
+  color: #fff;
+}
+.bet-orb small { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.08em; opacity: 0.85; }
+.bet-orb b { font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+
+.spin-orb {
+  justify-self: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  background: radial-gradient(circle at 35% 28%, #b2f2bb, #37b24d 55%, #2b8a3e);
+  border: 4px solid rgba(220, 255, 230, 0.55);
+  box-shadow:
+    0 0 0 4px rgba(55, 178, 77, 0.25),
+    0 12px 28px rgba(20, 120, 50, 0.45);
+  color: #fff;
+}
+.spin-orb.free {
+  background: radial-gradient(circle at 35% 28%, #ffe8a3, #f08c00 55%, #e67700);
+  border-color: rgba(255, 240, 200, 0.6);
+  box-shadow: 0 0 0 4px rgba(240, 140, 0, 0.28), 0 12px 28px rgba(200, 100, 0, 0.45);
+}
+.spin-orb.busy { opacity: 0.85; }
+.spin-orb .spin-ring {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.45);
+}
+.spin-orb.busy .spin-ring { animation: spinring 0.8s linear infinite; }
+@keyframes spinring { to { transform: rotate(360deg); } }
+.spin-orb .spin-core {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+.spin-orb small {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+
+.boost-orb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  background: radial-gradient(circle at 35% 30%, #fcc2d7, #e64980 60%, #a61e4d);
+  border: 3px solid rgba(255, 200, 220, 0.45);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(166, 30, 77, 0.35);
+}
+.boost-orb.on {
+  box-shadow: 0 0 0 3px rgba(255, 79, 216, 0.45), 0 8px 18px rgba(166, 30, 77, 0.45);
+}
+.boost-orb b { font-size: 1rem; line-height: 1; }
+.boost-orb small { font-size: 0.52rem; font-weight: 800; letter-spacing: 0.06em; }
+
 .legend {
   display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 560px;
 }
