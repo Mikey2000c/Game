@@ -62,8 +62,14 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
   }
 
   function submitEmail(mode: "login" | "signup") {
-    if (!email.includes("@") || password.length < 4) {
-      setError("Enter a valid email and password (4+ chars).");
+    if (!email.includes("@")) {
+      setError("Enter a valid email.");
+      beep(sfx.lose);
+      return;
+    }
+    // Local API has no password store yet — field is UX-only for the mock.
+    if (password.length > 0 && password.length < 4) {
+      setError("Password must be at least 4 characters (local demo).");
       beep(sfx.lose);
       return;
     }
@@ -189,14 +195,14 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
                 disabled={busy}
                 onClick={() =>
                   void finish(() =>
-                    googleEnabled
-                      ? Promise.reject(new Error("Add GIS button wiring with your Client ID"))
-                      : api.authGoogleDemo(name || "Google Player", email || undefined),
+                    api.authGoogleDemo(name || "Google Player", email || undefined),
                   )
                 }
               >
                 <span className="sico g">G</span>
-                {googleEnabled ? "Continue with Google" : "Continue with Google (demo)"}
+                {googleEnabled
+                  ? "Continue with Google (demo fallback)"
+                  : "Continue with Google (demo)"}
               </button>
             </div>
 
@@ -228,12 +234,12 @@ export function AuthFlow({ onAuthenticated, soundOn = true }: Props) {
               />
             </label>
             <label className="field">
-              <span>Password</span>
+              <span>Password <em className="field-hint">(local demo — not verified)</em></span>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="optional for now"
                 autoComplete={step === "login" ? "current-password" : "new-password"}
               />
             </label>

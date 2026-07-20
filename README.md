@@ -1,44 +1,44 @@
-# SpinKeep (local first)
+# SpinKeep — online social slots
 
-Desktop shortcut (this VM): `~/Desktop/SpinKeep` → this repo.
+Playable local stack: React mobile UI + Fastify API with JWT auth, server RNG spins, daily streak, and gifts.
 
 ## Quick start
 
 ```bash
-# one-time
 npm run install:all
 
 # terminal A — API (http://127.0.0.1:8787)
 npm run dev:api
 
-# terminal B — Web UI (http://127.0.0.1:5173)
+# terminal B — Web UI (http://127.0.0.1:5173, proxies /api → API)
 npm run dev:web
 ```
 
 1. Open **http://127.0.0.1:5173**
-2. Wait for **API online** pill on the auth screen
-3. Use **Google (demo)**, email, or guest
-4. Spins + daily claim hit the local API (`server/data/db.json`)
+2. Wait for the **API online** pill
+3. Continue as guest, Google (demo), or email
+4. Claim daily bonus → open a cabinet → spin (wallet updates from the server)
 
 ## Folders
 
 | Path | What |
 |------|------|
-| `mockup/` | React mobile UI |
-| `server/` | Fastify API + JSON DB |
-| `server/data/db.json` | Local users, balances, ledger |
+| `mockup/` | React mobile UI (Vite + Framer Motion) |
+| `server/` | Fastify API + JSON DB (`server/data/db.json`) |
 
-## Google login
+## Online game loop
 
-**Works now in demo mode** (no Google Cloud project).
+- **Auth** → JWT session in `localStorage`
+- **Lobby** → Home / Slots / Clan / Account
+- **Spin** → `POST /spin` (per-cabinet symbols, boost, free spins)
+- **Wallet** → server-authoritative token balance + XP/level
+- **Daily** → `POST /daily/claim` streak rewards
+- **Gifts** → `POST /gifts` to friend emails
 
-For **real** Google Sign-In later:
+Vite proxies `/api/*` to the Fastify server so LAN/cloud agents don't need `VITE_API_URL`.
 
-1. Google Cloud Console → OAuth Client ID (Web)
-2. Authorized JS origin: `http://127.0.0.1:5173`
-3. `export GOOGLE_CLIENT_ID=...` in `server/`
-4. Put the same ID in `mockup/.env` as `VITE_GOOGLE_CLIENT_ID`
+## Docs
 
-## API surface
-
-See `server/README.md` — `/auth/*`, `/me`, `/spin`, `/daily/claim`, `/gifts`.
+- Product plan: `mockup/PLAN.md`
+- API surface: `server/README.md`
+- Cloud agent notes: `AGENTS.md`

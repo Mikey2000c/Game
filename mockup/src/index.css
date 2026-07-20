@@ -1374,6 +1374,13 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+.field-hint {
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.75;
+}
 .field input {
   width: 100%;
   min-height: 48px;

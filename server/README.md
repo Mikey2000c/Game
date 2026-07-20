@@ -37,7 +37,7 @@ Without `GOOGLE_CLIENT_ID`, `/auth/google` accepts `{ "demo": true }` so the UI 
 | POST | `/auth/google` | no | Real or demo Google |
 | GET | `/me` | JWT | Profile + balance |
 | POST | `/daily/claim` | JWT | Streak bonus |
-| POST | `/spin` | JWT | Server RNG 5×3 |
+| POST | `/spin` | JWT | Server RNG 5×3 per `gameId`; body `{ stake, boost, freeSpin?, gameId }` — `stake` is base tokens, server doubles when `boost` |
 | POST | `/gifts` | JWT | Send tokens |
 
 Data file: `server/data/db.json`

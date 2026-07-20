@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8787";
+/** Prefer Vite proxy in dev; fall back to direct URL when set. */
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 export type ApiUser = {
   id: string;
@@ -62,7 +63,7 @@ export const api = {
     }),
   me: () => request<{ user: ApiUser }>("/me"),
   claimDaily: () => request<{ reward: number; user: ApiUser }>("/daily/claim", { method: "POST", body: "{}" }),
-  spin: (stake: number, boost: boolean, gameId: string) =>
+  spin: (stake: number, boost: boolean, gameId: string, freeSpin = false) =>
     request<{
       grid: { id: string; kind: string }[][];
       payout: number;
@@ -73,7 +74,7 @@ export const api = {
       user: ApiUser;
     }>("/spin", {
       method: "POST",
-      body: JSON.stringify({ stake, boost, gameId }),
+      body: JSON.stringify({ stake, boost, gameId, freeSpin }),
     }),
   gift: (toEmail: string, amount: number) =>
     request<{ ok: boolean; user: ApiUser }>("/gifts", {

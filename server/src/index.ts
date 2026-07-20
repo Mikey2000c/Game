@@ -171,9 +171,11 @@ app.post("/daily/claim", { preHandler: requireUser }, async (request, reply) => 
 app.post("/spin", { preHandler: requireUser }, async (request, reply) => {
   const body = z
     .object({
+      /** Base stake in tokens (before boost). */
       stake: z.number().int().positive().max(50_000),
       boost: z.boolean().default(false),
-      gameId: z.string().default("orchard"),
+      freeSpin: z.boolean().default(false),
+      gameId: z.string().default("fruit"),
     })
     .parse(request.body);
 
@@ -181,15 +183,23 @@ app.post("/spin", { preHandler: requireUser }, async (request, reply) => {
   const user = findUserById(db, request.user.sub);
   if (!user) return reply.code(404).send({ error: "User not found" });
 
-  const cost = body.boost ? body.stake * 2 : body.stake;
+  const cost = body.freeSpin ? 0 : body.boost ? body.stake * 2 : body.stake;
   if (user.tokens < cost) {
     return reply.code(400).send({ error: "Insufficient tokens", user: publicUser(user) });
   }
 
-  credit(db, user.id, -cost, "spin_bet", { gameId: body.gameId, boost: body.boost });
+  if (cost > 0) {
+    credit(db, user.id, -cost, "spin_bet", {
+      gameId: body.gameId,
+      boost: body.boost,
+      freeSpin: body.freeSpin,
+    });
+  }
 
-  const grid = spinReels(body.boost);
-  const result = evaluateSpin(grid, cost);
+  // Evaluate against charged stake (or base stake on free spins)
+  const evalStake = cost > 0 ? cost : body.stake;
+  const grid = spinReels(body.boost, body.gameId);
+  const result = evaluateSpin(grid, evalStake);
 
   if (result.payout > 0) {
     credit(db, user.id, result.payout, result.feature ? "bonus" : "spin_win", {

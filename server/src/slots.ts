@@ -1,31 +1,82 @@
-const SYMBOLS = [
-  { id: "fish", kind: "normal" },
-  { id: "bird", kind: "normal" },
-  { id: "cherry", kind: "normal" },
-  { id: "lemon", kind: "normal" },
-  { id: "10", kind: "normal" },
+/** Per-cabinet symbol tables — IDs must match mockup/src/App.tsx GAMES. */
+
+export type Cell = { id: string; kind: "normal" | "wild" | "scatter" };
+
+const SHARED_ROYALS: Cell[] = [
+  { id: "ten", kind: "normal" },
   { id: "j", kind: "normal" },
   { id: "q", kind: "normal" },
   { id: "k", kind: "normal" },
-  { id: "wild", kind: "wild" },
-  { id: "scatter", kind: "scatter" },
-] as const;
+];
 
-export type Cell = (typeof SYMBOLS)[number];
+const CATALOGS: Record<string, Cell[]> = {
+  fruit: [
+    { id: "fish", kind: "normal" },
+    { id: "bird", kind: "normal" },
+    { id: "ring", kind: "normal" },
+    { id: "ch", kind: "normal" },
+    { id: "lm", kind: "normal" },
+    ...SHARED_ROYALS,
+    { id: "wd", kind: "wild" },
+    { id: "sc", kind: "scatter" },
+  ],
+  console: [
+    { id: "pad", kind: "normal" },
+    { id: "disc", kind: "normal" },
+    { id: "cart", kind: "normal" },
+    { id: "audio", kind: "normal" },
+    ...SHARED_ROYALS,
+    { id: "plat", kind: "wild" },
+    { id: "live", kind: "scatter" },
+  ],
+  vault: [
+    { id: "gem", kind: "normal" },
+    { id: "key", kind: "normal" },
+    { id: "bag", kind: "normal" },
+    { id: "bolt", kind: "normal" },
+    { id: "ten", kind: "normal" },
+    { id: "j", kind: "normal" },
+    { id: "q", kind: "normal" },
+    { id: "safe", kind: "wild" },
+    { id: "sc", kind: "scatter" },
+  ],
+  raid: [
+    { id: "fire", kind: "normal" },
+    { id: "coin", kind: "normal" },
+    { id: "hit", kind: "normal" },
+    { id: "ten", kind: "normal" },
+    { id: "j", kind: "normal" },
+    { id: "q", kind: "normal" },
+    { id: "wd", kind: "wild" },
+    { id: "sc", kind: "scatter" },
+  ],
+};
 
-function pick(boost: boolean): Cell {
+function catalogFor(gameId: string): Cell[] {
+  return CATALOGS[gameId] ?? CATALOGS.fruit!;
+}
+
+function pick(symbols: Cell[], boost: boolean): Cell {
   const r = Math.random();
   const scatterOdds = boost ? 0.12 : 0.06;
   const wildOdds = boost ? 0.1 : 0.06;
-  if (r < scatterOdds) return SYMBOLS.find((s) => s.id === "scatter")!;
-  if (r < scatterOdds + wildOdds) return SYMBOLS.find((s) => s.id === "wild")!;
-  const normals = SYMBOLS.filter((s) => s.kind === "normal");
+  const scatters = symbols.filter((s) => s.kind === "scatter");
+  const wilds = symbols.filter((s) => s.kind === "wild");
+  const normals = symbols.filter((s) => s.kind === "normal");
+
+  if (r < scatterOdds && scatters.length) {
+    return scatters[Math.floor(Math.random() * scatters.length)]!;
+  }
+  if (r < scatterOdds + wildOdds && wilds.length) {
+    return wilds[Math.floor(Math.random() * wilds.length)]!;
+  }
   return normals[Math.floor(Math.random() * normals.length)]!;
 }
 
 /** 5×3 grid, column-major */
-export function spinReels(boost: boolean): Cell[][] {
-  return Array.from({ length: 5 }, () => Array.from({ length: 3 }, () => pick(boost)));
+export function spinReels(boost: boolean, gameId = "fruit"): Cell[][] {
+  const symbols = catalogFor(gameId);
+  return Array.from({ length: 5 }, () => Array.from({ length: 3 }, () => pick(symbols, boost)));
 }
 
 export function evaluateSpin(grid: Cell[][], stake: number) {

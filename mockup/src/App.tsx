@@ -137,16 +137,6 @@ const FRIENDS = [
   { id: "j", name: "Jules", status: "Offline", gift: 50 },
 ];
 
-const STREAK = [
-  { day: 1, done: true },
-  { day: 2, done: true },
-  { day: 3, done: true },
-  { day: 4, done: false, today: true },
-  { day: 5, done: false },
-  { day: 6, done: false },
-  { day: 7, done: false, bonus: true },
-];
-
 const TROPHIES = [
   { id: "bronze", label: "Bronze", ico: "🥉" },
   { id: "silver", label: "Silver", ico: "🥈" },
@@ -196,9 +186,19 @@ export default function App() {
 
   const dailyReward = 500 + (streakDay - 1) * 100;
   const bet = BET_STEPS[betIndex] ?? 0.5;
-  const totalBet = bet * (betBoost ? 2 : 1);
-  const stakeTokens = Math.round(totalBet * 100);
+  /** Base stake in tokens — server applies boost once. */
+  const stakeTokens = Math.round(bet * 100);
+  const chargeTokens = betBoost ? stakeTokens * 2 : stakeTokens;
   const xpPct = Math.min(100, xp);
+  const streakDays = Array.from({ length: 7 }, (_, i) => {
+    const day = i + 1;
+    return {
+      day,
+      done: day < streakDay || (day === streakDay && claimed),
+      today: !claimed && day === Math.min(7, streakDay || 1),
+      bonus: day === 7,
+    };
+  });
 
   function applyUser(u: ApiUser) {
     setUser(u);
@@ -256,8 +256,8 @@ export default function App() {
         if (m.id !== id || m.progress >= m.target) return m;
         const progress = Math.min(m.target, m.progress + by);
         if (progress >= m.target && m.progress < m.target) {
-          setTokens((t) => t + m.reward);
-          setToast(`Mission clear +${m.reward}`);
+          // Cosmetic only — wallet stays server-authoritative
+          setToast(`Mission clear: ${m.title}`);
           beep(sfx.claim);
         }
         return { ...m, progress };
@@ -344,8 +344,8 @@ export default function App() {
       const total = next.reduce<number>((sum, v) => sum + (v ?? 0), 0);
       const boosted = betBoost ? total * 2 : total;
       setBonusDone(true);
-      setTokens((v) => v + boosted);
-      setMessage(`Bonus +${boosted} · Free spins awarded!`);
+      // Scatter payout already credited by /spin — pick UI awards free spins only
+      setMessage(`Portal cleared · +${betBoost ? 5 : 3} free spins!`);
       setFreeSpins((f) => f + (betBoost ? 5 : 3));
       setBigWin(boosted);
       beep(sfx.winBig);
@@ -357,20 +357,28 @@ export default function App() {
   function mapServerGrid(game: GameDef, raw: { id: string; kind: string }[][]): GridSymbol[][] {
     return raw.map((col) =>
       col.map((cell) => {
-        const match =
-          game.symbols.find((s) => s.id === cell.id) ||
-          game.symbols.find((s) => s.kind === cell.kind) ||
-          game.symbols.find((s) => s.label.toLowerCase().includes(cell.id)) ||
-          game.symbols[0]!;
-        return match;
+        const byId = game.symbols.find((s) => s.id === cell.id);
+        if (byId) return byId;
+        if (cell.kind === "wild") {
+          return game.symbols.find((s) => s.kind === "wild") || game.symbols[0]!;
+        }
+        if (cell.kind === "scatter") {
+          return (
+            game.symbols.find((s) => s.kind === "scatter") ||
+            game.symbols.find((s) => s.kind === "bonus") ||
+            game.symbols[0]!
+          );
+        }
+        return game.symbols[0]!;
       }),
     );
   }
 
   function spin() {
     if (spinning || !activeGame || bonusOpen) return;
-    if (freeSpins <= 0 && tokens < stakeTokens) {
-      setToast(`Need ${stakeTokens} tokens`);
+    const usingFree = freeSpins > 0;
+    if (!usingFree && tokens < chargeTokens) {
+      setToast(`Need ${chargeTokens} tokens`);
       return;
     }
 
@@ -389,7 +397,7 @@ export default function App() {
           setGrid(buildGrid(activeGame.symbols));
         }, 70);
 
-        const res = await api.spin(stakeTokens, betBoost, activeGame.id);
+        const res = await api.spin(stakeTokens, betBoost, activeGame.id, usingFree);
         window.clearInterval(anim);
 
         const final = mapServerGrid(activeGame, res.grid);
@@ -398,7 +406,7 @@ export default function App() {
         applyUser(res.user);
         beep(sfx.reelStop);
 
-        if (freeSpins > 0) setFreeSpins((f) => Math.max(0, f - 1));
+        if (usingFree) setFreeSpins((f) => Math.max(0, f - 1));
 
         if (res.feature || res.scatters >= 3) {
           setWinCells(new Set(res.wins));
@@ -421,9 +429,9 @@ export default function App() {
           setWinCells(new Set(res.wins));
           setMessage(`WIN ${res.payout}!`);
           setCombo((c) => c + 1);
-          beep(res.payout >= stakeTokens * 8 ? sfx.winBig : sfx.winSmall);
+          beep(res.payout >= chargeTokens * 8 ? sfx.winBig : sfx.winSmall);
           if (betBoost) bumpMission("m3");
-          if (res.payout >= stakeTokens * 8) {
+          if (res.payout >= chargeTokens * 8) {
             setBigWin(res.payout);
             unlockTrophy("silver");
           }
@@ -446,8 +454,8 @@ export default function App() {
       <div className="stage-label">
         <h1>SpinKeep</h1>
         <p>
-          Polished mobile social casino mockup — login, 5×3 slots, clans, gifts,
-          and daily hooks.
+          Online social slots — guest/email login, server RNG cabinets, daily streak,
+          gifts, and a live token wallet.
         </p>
       </div>
 
@@ -660,7 +668,7 @@ export default function App() {
                       <span className="chip gold">Day {streakDay}/7</span>
                     </div>
                     <div className="streak-row">
-                      {STREAK.map((d) => (
+                      {streakDays.map((d) => (
                         <div
                           key={d.day}
                           className={`day-pip${d.done ? " done" : ""}${d.today ? " today" : ""}`}
@@ -1087,7 +1095,7 @@ export default function App() {
       </div>
 
       <div className="legend">
-        <span>Login · Apple / Google / email</span>
+        <span>Login · Guest / Google demo / email</span>
         <span>5×3 mobile slots</span>
         <span>Polished UI</span>
       </div>
