@@ -561,7 +561,7 @@ export default function App() {
                 {activeGame ? (
                   <motion.div
                     key="play"
-                    className="screen-pad"
+                    className="screen-pad play-screen"
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}

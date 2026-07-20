@@ -1221,6 +1221,335 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .boost-orb b { font-size: 0.9rem; line-height: 1; }
 .boost-orb small { font-size: 0.5rem; font-weight: 800; letter-spacing: 0.06em; }
 
+/* —— Realistic 3D online-slots cabinet layer —— */
+.vslot-wrap {
+  perspective: 900px;
+  margin: 4px 0 8px;
+}
+.vslot.realistic {
+  transform: rotateX(4deg) translateZ(0);
+  transform-style: preserve-3d;
+  border-radius: 26px;
+  padding: 14px 12px 16px;
+  border: none;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35),
+    0 22px 40px rgba(0, 0, 0, 0.55),
+    0 2px 0 rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+.vslot.realistic::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 220, 150, 0.35),
+    inset 0 0 0 6px rgba(20, 16, 8, 0.55),
+    inset 0 18px 40px rgba(255, 255, 255, 0.06),
+    inset 0 -28px 50px rgba(0, 0, 0, 0.45);
+}
+.cab-rim {
+  position: absolute;
+  inset: 5px;
+  border-radius: 22px;
+  pointer-events: none;
+  z-index: 2;
+  border: 1px solid rgba(255, 230, 170, 0.22);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 28%, transparent 72%, rgba(0, 0, 0, 0.25));
+}
+.cab-ambient {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 220, 140, 0.22), transparent 42%),
+    radial-gradient(circle at 20% 100%, rgba(80, 160, 255, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 100%, rgba(255, 90, 61, 0.1), transparent 38%);
+  animation: ambientDrift 8s ease-in-out infinite alternate;
+}
+@keyframes ambientDrift {
+  from { transform: translateY(0) scale(1); opacity: 0.85; }
+  to { transform: translateY(-8px) scale(1.04); opacity: 1; }
+}
+
+.vslot.realistic .chrome-bolt {
+  width: 14px;
+  height: 14px;
+  background:
+    radial-gradient(circle at 32% 28%, #fffcef, #f0c75e 38%, #a67c00 72%, #4a3200);
+  box-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.55),
+    inset 0 1px 1px rgba(255, 255, 255, 0.7);
+}
+.vslot.realistic .chrome-bolt.tl { top: 11px; left: 11px; }
+.vslot.realistic .chrome-bolt.tr { top: 11px; right: 11px; }
+.vslot.realistic .chrome-bolt.bl { bottom: 11px; left: 11px; }
+.vslot.realistic .chrome-bolt.br { bottom: 11px; right: 11px; }
+
+.title-plate {
+  margin: 2px 8px 8px;
+  padding: 8px 12px 10px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 230, 160, 0.18), rgba(0, 0, 0, 0.28)),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.2), transparent 20%, transparent 80%, rgba(0, 0, 0, 0.2));
+  border: 1px solid rgba(255, 220, 150, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 16px rgba(0, 0, 0, 0.25);
+}
+.vslot.realistic .vslot-title h2 {
+  font-size: 1.45rem;
+  background: linear-gradient(180deg, #fff6d0 0%, #ffd666 45%, #e67700 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.55));
+}
+.vslot.realistic .vslot-title p {
+  font-size: 0.64rem;
+  letter-spacing: 0.02em;
+}
+
+.reel-bezel {
+  position: relative;
+  border-radius: 16px;
+  padding: 8px;
+  background:
+    linear-gradient(180deg, #3a3428 0%, #1a1610 40%, #0c0a08 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 220, 160, 0.35),
+    inset 0 2px 4px rgba(0, 0, 0, 0.7),
+    0 12px 22px rgba(0, 0, 0, 0.4);
+}
+.reel-glass {
+  position: absolute;
+  inset: 8px;
+  border-radius: 10px;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.16) 0%, transparent 28%, transparent 60%, rgba(120, 180, 255, 0.05) 100%);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.25);
+}
+.reel-vignette {
+  position: absolute;
+  inset: 8px;
+  border-radius: 10px;
+  z-index: 4;
+  pointer-events: none;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.55);
+}
+
+.vslot.realistic .vslot-grid {
+  --cell: 82px;
+  height: calc(var(--cell) * 3);
+  padding: 0;
+  gap: 3px;
+  border: none;
+  border-radius: 10px;
+  background: #05070d;
+  box-shadow: none;
+  overflow: hidden;
+}
+.vslot.realistic .vslot-col {
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.55), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.55)),
+    linear-gradient(180deg, #141a28, #0a0e18);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.45);
+  height: calc(var(--cell) * 3);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
+}
+.vslot.realistic .vslot-col.is-spin .vslot-strip {
+  filter: blur(1.4px) brightness(1.08) saturate(1.1);
+}
+
+.vslot.realistic .vsym {
+  margin: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 35%),
+    linear-gradient(160deg, color-mix(in srgb, var(--c2) 85%, #fff) 0%, var(--c1) 55%, color-mix(in srgb, var(--c1) 55%, #000) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.35);
+  transform-style: preserve-3d;
+}
+.vsym-depth {
+  position: absolute;
+  inset: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  z-index: 1;
+}
+.vslot.realistic .vsym-shine {
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 22%, transparent 42%),
+    linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.2));
+  animation: symbolSheen 4.5s ease-in-out infinite;
+}
+@keyframes symbolSheen {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.95; }
+}
+.vslot.realistic .sym-svg {
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.45));
+}
+.vslot.realistic .vsym.kind-scatter .sym-svg,
+.vslot.realistic .vsym.kind-wild .sym-svg,
+.vslot.realistic .vsym.kind-money .sym-svg,
+.vslot.realistic .vsym.kind-bonus .sym-svg {
+  width: 48px;
+  height: 48px;
+}
+.vslot.realistic .vsym.win {
+  z-index: 3;
+  box-shadow:
+    0 0 0 2px #ffe08a,
+    0 0 22px rgba(255, 210, 90, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  animation: vwin 0.5s ease-in-out infinite alternate;
+}
+
+.vslot.realistic .vslot-msg {
+  margin: 10px 6px 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.65));
+  border: 1px solid rgba(255, 220, 150, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 0.92rem;
+}
+.vslot.realistic .vslot-msg span {
+  display: inline-block;
+}
+
+.lcd-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  margin-bottom: 12px !important;
+}
+.lcd {
+  text-align: center;
+  padding: 8px 6px;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, #0b1a14, #04110c);
+  border: 1px solid rgba(80, 220, 160, 0.25);
+  box-shadow:
+    inset 0 0 12px rgba(40, 255, 160, 0.08),
+    0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.lcd small {
+  display: block;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: rgba(140, 255, 200, 0.65);
+  font-weight: 800;
+}
+.lcd b {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  color: #7dffc0;
+  text-shadow: 0 0 8px rgba(80, 255, 180, 0.35);
+}
+.lcd.win-lcd b.lit {
+  color: #ffe08a;
+  text-shadow: 0 0 10px rgba(255, 200, 80, 0.55);
+}
+
+.vslot-controls.deck {
+  padding: 10px 6px 4px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.35));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.vslot.realistic .spin-orb {
+  width: 102px;
+  height: 102px;
+  background:
+    radial-gradient(circle at 35% 28%, #d8f5a2, #51cf66 42%, #2f9e44 68%, #1b5e2a);
+  border: 5px solid rgba(230, 255, 220, 0.55);
+  box-shadow:
+    0 0 0 3px rgba(20, 80, 40, 0.55),
+    0 14px 28px rgba(10, 80, 30, 0.55),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.35),
+    inset 0 6px 10px rgba(255, 255, 255, 0.25);
+}
+.spin-glow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(120, 255, 160, 0.35), transparent 65%);
+  animation: spinGlow 1.8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes spinGlow {
+  from { opacity: 0.45; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1.04); }
+}
+.vslot.realistic .spin-orb .spin-core {
+  font-size: 1.15rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+.vslot.realistic .bet-orb,
+.vslot.realistic .boost-orb {
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.35),
+    inset 0 2px 4px rgba(255, 255, 255, 0.25),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.3);
+}
+.orb-gloss {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.4), transparent 40%);
+  pointer-events: none;
+}
+.vslot.realistic .mini-orb {
+  min-height: 30px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.vslot.realistic.is-live .led-chase span.on {
+  animation: ledBlink 0.35s ease-in-out infinite alternate;
+}
+@keyframes ledBlink {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.4); }
+}
+
+.play-screen {
+  padding-bottom: 4px;
+}
+.play-screen .jackpot-ticker {
+  margin-bottom: 8px;
+  background:
+    linear-gradient(90deg, rgba(240, 193, 75, 0.22), rgba(255, 90, 61, 0.12));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+.play-screen .xp-card {
+  display: none;
+}
+
 .account-page .account-hero {
   display: flex;
   gap: 14px;

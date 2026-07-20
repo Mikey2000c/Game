@@ -53,7 +53,7 @@ const THEME_CLASS: Record<Props["theme"], string> = {
   raid: "theme-raid",
 };
 
-const CELL = 78;
+const CELL = 82;
 const VISIBLE = 3;
 const STRIP_LEN = 30;
 
@@ -371,78 +371,119 @@ export function SlotMachine({
   const showReels = reels.length === 5 ? reels : null;
 
   return (
-    <div
-      className={`vslot bass-cab premium ${THEME_CLASS[theme]}${freeSpins > 0 ? " in-feature" : ""}${anticipation ? " anticipating" : ""}${collectPulse ? " collecting" : ""}${lastWin > 0 && !spinning ? " has-win" : ""}`}
-    >
-      <div className="vslot-chrome" aria-hidden>
-        <i className="chrome-bolt tl" />
-        <i className="chrome-bolt tr" />
-        <i className="chrome-bolt bl" />
-        <i className="chrome-bolt br" />
-      </div>
-
-      <div className="led-chase" aria-hidden>
-        {Array.from({ length: 24 }, (_, i) => (
-          <span
-            key={i}
-            className={i % 24 === ledTick % 24 || (i + 12) % 24 === ledTick % 24 ? "on" : ""}
-          />
-        ))}
-      </div>
-
-      <div className="vslot-title">
-        <h2>{title}</h2>
-        {subtitle && <p>{subtitle}</p>}
-      </div>
-
-      {(freeSpins > 0 || featureLabel) && (
-        <div className="feature-banner">
-          <span>{featureLabel || "FREE SPINS"}</span>
-          {freeSpins > 0 && <b>{freeSpins} LEFT</b>}
-        </div>
-      )}
-
-      <div className="vslot-stage">
-        <div className="payline-rail left" aria-hidden>
-          {Array.from({ length: lines }, (_, i) => (
-            <span key={i} style={{ background: lineColor(i) }}>
-              {i + 1}
-            </span>
-          ))}
+    <div className="vslot-wrap">
+      <div
+        className={`vslot bass-cab premium realistic ${THEME_CLASS[theme]}${freeSpins > 0 ? " in-feature" : ""}${anticipation ? " anticipating" : ""}${collectPulse ? " collecting" : ""}${lastWin > 0 && !spinning ? " has-win" : ""}${spinning ? " is-live" : ""}`}
+      >
+        <div className="cab-ambient" aria-hidden />
+        <div className="cab-rim" aria-hidden />
+        <div className="vslot-chrome" aria-hidden>
+          <i className="chrome-bolt tl" />
+          <i className="chrome-bolt tr" />
+          <i className="chrome-bolt bl" />
+          <i className="chrome-bolt br" />
         </div>
 
-        <div
-          className={`vslot-grid${spinning ? " spinning" : ""}${anticipation ? " anticipate" : ""}`}
-          style={{ "--cell": `${CELL}px` } as CSSProperties}
-        >
-          {winLines.map((r) => (
-            <div
-              key={`wl-${r}`}
-              className="win-line"
-              style={{ top: `calc(${r} * var(--cell) + var(--cell) / 2 + 7px)` }}
+        <div className="led-chase" aria-hidden>
+          {Array.from({ length: 24 }, (_, i) => (
+            <span
+              key={i}
+              className={i % 24 === ledTick % 24 || (i + 12) % 24 === ledTick % 24 ? "on" : ""}
             />
           ))}
+        </div>
 
-          {showReels
-            ? showReels.map((reel, c) => (
+        <div className="vslot-title">
+          <div className="title-plate">
+            <h2>{title}</h2>
+            {subtitle && <p>{subtitle}</p>}
+          </div>
+        </div>
+
+        {(freeSpins > 0 || featureLabel) && (
+          <div className="feature-banner">
+            <span>{featureLabel || "FREE SPINS"}</span>
+            {freeSpins > 0 && <b>{freeSpins} LEFT</b>}
+          </div>
+        )}
+
+        <div className="vslot-stage">
+          <div className="payline-rail left" aria-hidden>
+            {Array.from({ length: lines }, (_, i) => (
+              <span key={i} style={{ background: lineColor(i) }}>
+                {i + 1}
+              </span>
+            ))}
+          </div>
+
+          <div className="reel-bezel">
+            <div className="reel-glass" aria-hidden />
+            <div className="reel-vignette" aria-hidden />
+            <div
+              className={`vslot-grid${spinning ? " spinning" : ""}${anticipation ? " anticipate" : ""}`}
+              style={{ "--cell": `${CELL}px` } as CSSProperties}
+            >
+              {winLines.map((r) => (
                 <div
-                  className={`vslot-col${reel.spinning ? " is-spin" : ""}${reel.stopped && spinning ? " is-thud" : ""}${!reel.spinning && !spinning && winCells?.size ? " settled" : ""}`}
-                  key={c}
-                >
-                  <div
-                    className="vslot-strip"
-                    style={{ transform: `translate3d(0, ${reel.offset}px, 0)` }}
-                  >
-                    {reel.strip.map((sym, idx) => {
-                      const rowInView = Math.round(-reel.offset / CELL);
-                      const r = idx - rowInView;
-                      const inWindow = r >= 0 && r < VISIBLE;
-                      const win = inWindow && winCells?.has(cellKey(c, r));
-                      const money = inWindow && moneyCells?.has(cellKey(c, r));
-                      return (
+                  key={`wl-${r}`}
+                  className="win-line"
+                  style={{ top: `calc(${r} * var(--cell) + var(--cell) / 2)` }}
+                />
+              ))}
+
+              {showReels
+                ? showReels.map((reel, c) => (
+                    <div
+                      className={`vslot-col${reel.spinning ? " is-spin" : ""}${reel.stopped && spinning ? " is-thud" : ""}${!reel.spinning && !spinning && winCells?.size ? " settled" : ""}`}
+                      key={c}
+                    >
+                      <div
+                        className="vslot-strip"
+                        style={{ transform: `translate3d(0, ${reel.offset}px, 0)` }}
+                      >
+                        {reel.strip.map((sym, idx) => {
+                          const rowInView = Math.round(-reel.offset / CELL);
+                          const r = idx - rowInView;
+                          const inWindow = r >= 0 && r < VISIBLE;
+                          const win = inWindow && winCells?.has(cellKey(c, r));
+                          const money = inWindow && moneyCells?.has(cellKey(c, r));
+                          return (
+                            <div
+                              key={`${c}-${idx}-${sym.id}-${sym.value ?? ""}`}
+                              className={`vsym${sym.kind && sym.kind !== "normal" ? ` kind-${sym.kind}` : ""}${win ? " win" : ""}${money ? " money-lit" : ""}`}
+                              style={
+                                {
+                                  "--c1": sym.color,
+                                  "--c2": sym.accent,
+                                  height: CELL,
+                                } as CSSProperties
+                              }
+                            >
+                              <div className="vsym-depth" aria-hidden />
+                              <div className="vsym-shine" aria-hidden />
+                              <div className="vsym-face">
+                                <SymbolIcon id={sym.id} />
+                                <span className="vsym-label">{sym.label}</span>
+                                {sym.kind === "money" && sym.value != null && (
+                                  <span className="vsym-cash">{sym.value}×</span>
+                                )}
+                                {sym.kind && sym.kind !== "normal" && sym.kind !== "money" && (
+                                  <span className="vsym-tag">{sym.kind}</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {anticipation && c === 4 && spinning && <div className="anticipate-glow" />}
+                    </div>
+                  ))
+                : grid.map((col, c) => (
+                    <div className="vslot-col" key={c}>
+                      {col.map((sym, r) => (
                         <div
-                          key={`${c}-${idx}-${sym.id}-${sym.value ?? ""}`}
-                          className={`vsym${sym.kind && sym.kind !== "normal" ? ` kind-${sym.kind}` : ""}${win ? " win" : ""}${money ? " money-lit" : ""}`}
+                          key={`${c}-${r}-${sym.id}`}
+                          className={`vsym${sym.kind && sym.kind !== "normal" ? ` kind-${sym.kind}` : ""}${winCells?.has(cellKey(c, r)) ? " win" : ""}`}
                           style={
                             {
                               "--c1": sym.color,
@@ -451,132 +492,111 @@ export function SlotMachine({
                             } as CSSProperties
                           }
                         >
+                          <div className="vsym-depth" aria-hidden />
                           <div className="vsym-shine" aria-hidden />
                           <div className="vsym-face">
                             <SymbolIcon id={sym.id} />
                             <span className="vsym-label">{sym.label}</span>
-                            {sym.kind === "money" && sym.value != null && (
-                              <span className="vsym-cash">{sym.value}×</span>
-                            )}
-                            {sym.kind && sym.kind !== "normal" && sym.kind !== "money" && (
-                              <span className="vsym-tag">{sym.kind}</span>
-                            )}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                  {anticipation && c === 4 && spinning && <div className="anticipate-glow" />}
-                </div>
-              ))
-            : grid.map((col, c) => (
-                <div className="vslot-col" key={c}>
-                  {col.map((sym, r) => (
-                    <div
-                      key={`${c}-${r}-${sym.id}`}
-                      className={`vsym${sym.kind && sym.kind !== "normal" ? ` kind-${sym.kind}` : ""}${winCells?.has(cellKey(c, r)) ? " win" : ""}`}
-                      style={
-                        {
-                          "--c1": sym.color,
-                          "--c2": sym.accent,
-                          height: CELL,
-                        } as CSSProperties
-                      }
-                    >
-                      <div className="vsym-shine" aria-hidden />
-                      <div className="vsym-face">
-                        <SymbolIcon id={sym.id} />
-                        <span className="vsym-label">{sym.label}</span>
-                      </div>
+                      ))}
                     </div>
                   ))}
+
+              {lastWin > 0 && !spinning && (
+                <div className="win-float" key={lastWin}>
+                  +{lastWin.toLocaleString()}
                 </div>
-              ))}
-
-          {lastWin > 0 && !spinning && (
-            <div className="win-float" key={lastWin}>
-              +{lastWin.toLocaleString()}
+              )}
             </div>
-          )}
+          </div>
+
+          <div className="payline-rail right" aria-hidden>
+            {Array.from({ length: lines }, (_, i) => (
+              <span key={i} style={{ background: lineColor(lines - 1 - i) }}>
+                {lines - i}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <div className="payline-rail right" aria-hidden>
-          {Array.from({ length: lines }, (_, i) => (
-            <span key={i} style={{ background: lineColor(lines - 1 - i) }}>
-              {lines - i}
-            </span>
-          ))}
+        <div className={`vslot-msg${lastWin > 0 && !spinning ? " winny" : ""}`}>
+          <span>{message}</span>
         </div>
-      </div>
 
-      <div className={`vslot-msg${lastWin > 0 && !spinning ? " winny" : ""}`}>{message}</div>
-
-      <div className="vslot-meter">
-        <div>
-          <small>CREDIT</small>
-          <b>{credit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>
-        </div>
-        <div>
-          <small>WIN</small>
-          <b className={lastWin > 0 ? "lit" : ""}>
-            {(lastWin / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </b>
-        </div>
-        <div>
-          <small>TOTAL BET</small>
-          <b>{totalBet.toFixed(2)}</b>
-        </div>
-      </div>
-
-      <div className="vslot-controls">
-        <div className="bet-stack">
-          <button className="bet-arrow" onClick={onBetUp} aria-label="Increase bet" disabled={spinning}>
-            ▲
-          </button>
-          <div className="bet-orb">
+        <div className="vslot-meter lcd-row">
+          <div className="lcd">
+            <small>CREDIT</small>
+            <b>{credit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>
+          </div>
+          <div className="lcd win-lcd">
+            <small>WIN</small>
+            <b className={lastWin > 0 ? "lit" : ""}>
+              {(lastWin / 100).toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </b>
+          </div>
+          <div className="lcd">
             <small>BET</small>
             <b>{totalBet.toFixed(2)}</b>
           </div>
-          <button className="bet-arrow" onClick={onBetDown} aria-label="Decrease bet" disabled={spinning}>
-            ▼
-          </button>
         </div>
 
-        <button
-          className={`spin-orb${spinning ? " busy" : ""}${freeSpins > 0 ? " free" : ""}${auto ? " auto" : ""}`}
-          onClick={onSpin}
-          disabled={disabled || spinning}
-          aria-label="Spin"
-        >
-          <span className="spin-ring" />
-          <span className="spin-core">{spinning ? "…" : freeSpins > 0 ? freeSpins : "↻"}</span>
-          <small>{freeSpins > 0 ? "FREE" : auto ? "AUTO" : "SPIN"}</small>
-        </button>
+        <div className="vslot-controls deck">
+          <div className="bet-stack">
+            <button className="bet-arrow" onClick={onBetUp} aria-label="Increase bet" disabled={spinning}>
+              ▲
+            </button>
+            <div className="bet-orb">
+              <span className="orb-gloss" aria-hidden />
+              <small>BET</small>
+              <b>{totalBet.toFixed(2)}</b>
+            </div>
+            <button className="bet-arrow" onClick={onBetDown} aria-label="Decrease bet" disabled={spinning}>
+              ▼
+            </button>
+          </div>
 
-        <div className="side-orbs">
           <button
-            className={`boost-orb${boostOn ? " on" : ""}`}
-            onClick={onToggleBoost}
-            aria-pressed={!!boostOn}
-            disabled={spinning}
+            className={`spin-orb${spinning ? " busy" : ""}${freeSpins > 0 ? " free" : ""}${auto ? " auto" : ""}`}
+            onClick={onSpin}
+            disabled={disabled || spinning}
+            aria-label="Spin"
           >
-            <b>2×</b>
-            <small>BOOST</small>
+            <span className="spin-glow" aria-hidden />
+            <span className="spin-ring" />
+            <span className="spin-core">{spinning ? "…" : freeSpins > 0 ? freeSpins : "SPIN"}</span>
+            <small>{freeSpins > 0 ? "FREE" : auto ? "AUTO" : "HOLD"}</small>
           </button>
-          <button
-            className={`mini-orb${turbo ? " on" : ""}`}
-            onClick={() => setTurbo((v) => !v)}
-            aria-pressed={turbo}
-          >
-            <b>TURBO</b>
-          </button>
-          <button
-            className={`mini-orb${auto ? " on" : ""}`}
-            onClick={() => setAuto((v) => !v)}
-            aria-pressed={auto}
-          >
-            <b>AUTO</b>
-          </button>
+
+          <div className="side-orbs">
+            <button
+              className={`boost-orb${boostOn ? " on" : ""}`}
+              onClick={onToggleBoost}
+              aria-pressed={!!boostOn}
+              disabled={spinning}
+            >
+              <span className="orb-gloss" aria-hidden />
+              <b>2×</b>
+              <small>BOOST</small>
+            </button>
+            <button
+              className={`mini-orb${turbo ? " on" : ""}`}
+              onClick={() => setTurbo((v) => !v)}
+              aria-pressed={turbo}
+            >
+              <b>TURBO</b>
+            </button>
+            <button
+              className={`mini-orb${auto ? " on" : ""}`}
+              onClick={() => setAuto((v) => !v)}
+              aria-pressed={auto}
+            >
+              <b>AUTO</b>
+            </button>
+          </div>
         </div>
       </div>
     </div>
