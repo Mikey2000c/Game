@@ -15,6 +15,16 @@ type GameDef = {
   theme: Theme;
   symbols: ReelSymbol[];
   note?: string;
+  featured?: boolean;
+};
+
+type Mission = {
+  id: string;
+  title: string;
+  detail: string;
+  progress: number;
+  target: number;
+  reward: number;
 };
 
 const BASE_STAKE = 50;
@@ -22,77 +32,78 @@ const BOOST_MULT = 2;
 
 const GAMES: GameDef[] = [
   {
-    id: "fruit",
-    name: "Neon Orchard",
-    blurb: "Fruit reels · scatters unlock fruit frenzy",
-    art: "art-fruit",
-    theme: "orchard",
+    id: "console",
+    name: "Platinum Pad Live",
+    blurb: "Console-cabinet megaways energy · trophies, portals, free spins",
+    art: "art-console",
+    theme: "console",
+    featured: true,
+    note: "Original console theme — not affiliated with Sony or PlayStation. Licensed console brands need a deal.",
     symbols: [
-      { id: "ch", label: "CH", color: "#ff6b6b", accent: "#ffd6d6" },
-      { id: "lm", label: "LM", color: "#ffd43b", accent: "#fff3bf" },
-      { id: "bl", label: "BL", color: "#748ffc", accent: "#dbe4ff" },
-      { id: "bn", label: "BN", color: "#ff922b", accent: "#ffe8cc" },
-      { id: "wd", label: "WD", color: "#20c997", accent: "#c3fae8", kind: "wild" },
-      { id: "sc", label: "SC", color: "#f06595", accent: "#ffdeeb", kind: "scatter" },
+      { id: "pad", label: "PAD", color: "#3d6bff", accent: "#b6c7ff", icon: "pad" },
+      { id: "disc", label: "DISC", color: "#868e96", accent: "#dee2e6", icon: "disc" },
+      { id: "cart", label: "CART", color: "#15aabf", accent: "#99e9f2", icon: "cart" },
+      { id: "phones", label: "AUDIO", color: "#ff6b4a", accent: "#ffc9b8", icon: "headset" },
+      { id: "cup", label: "PLAT", color: "#fab005", accent: "#ffe8a3", kind: "wild", icon: "trophy" },
+      { id: "port", label: "PORT", color: "#7950f2", accent: "#d0bfff", kind: "bonus", icon: "portal" },
+      { id: "sc", label: "LIVE", color: "#ff4fd8", accent: "#ffc2ef", kind: "scatter", icon: "star" },
     ],
   },
   {
-    id: "console",
-    name: "Circuit Pad",
-    blurb: "Original console-cabinet theme · pad, disc, trophy reels",
-    art: "art-console",
-    theme: "console",
-    note: "Original art only — not affiliated with Sony or PlayStation. Official console brands need a license.",
+    id: "fruit",
+    name: "Neon Orchard",
+    blurb: "Classic fruit · Coral-style punchy wins",
+    art: "art-fruit",
+    theme: "orchard",
     symbols: [
-      { id: "pad", label: "PAD", color: "#3d6bff", accent: "#d0dbff" },
-      { id: "disc", label: "DISC", color: "#868e96", accent: "#e9ecef" },
-      { id: "cart", label: "CART", color: "#15aabf", accent: "#c5f6fa" },
-      { id: "joy", label: "JOY", color: "#ff6b4a", accent: "#ffd8ce" },
-      { id: "cup", label: "CUP", color: "#fab005", accent: "#fff3bf", kind: "wild" },
-      { id: "port", label: "PORT", color: "#7950f2", accent: "#e5dbff", kind: "bonus" },
-      { id: "sc", label: "SC", color: "#ff4fd8", accent: "#ffd6f5", kind: "scatter" },
+      { id: "ch", label: "CHERRY", color: "#ff6b6b", accent: "#ffc9c9", icon: "cherry" },
+      { id: "lm", label: "LEMON", color: "#ffd43b", accent: "#fff3bf", icon: "lemon" },
+      { id: "bl", label: "BELL", color: "#748ffc", accent: "#dbe4ff", icon: "bell" },
+      { id: "bn", label: "BAR", color: "#ff922b", accent: "#ffe8cc", icon: "coin" },
+      { id: "wd", label: "WILD", color: "#20c997", accent: "#c3fae8", kind: "wild", icon: "star" },
+      { id: "sc", label: "SCAT", color: "#f06595", accent: "#ffdeeb", kind: "scatter", icon: "star" },
     ],
   },
   {
     id: "vault",
     name: "Vault Rush",
-    blurb: "Jackpot trail · random vault heist bonus",
+    blurb: "Progressive vault · BetVictor-green jackpot trail",
     art: "art-vault",
     theme: "vault",
     symbols: [
-      { id: "gem", label: "GEM", color: "#22b8cf", accent: "#c5f6fa" },
-      { id: "key", label: "KEY", color: "#fcc419", accent: "#fff3bf" },
-      { id: "bag", label: "BAG", color: "#51cf66", accent: "#d3f9d8" },
-      { id: "bolt", label: "ZAP", color: "#ff922b", accent: "#ffe8cc" },
-      { id: "safe", label: "SAFE", color: "#748ffc", accent: "#dbe4ff", kind: "wild" },
-      { id: "sc", label: "SC", color: "#e64980", accent: "#ffdeeb", kind: "scatter" },
+      { id: "gem", label: "GEM", color: "#22b8cf", accent: "#c5f6fa", icon: "gem" },
+      { id: "key", label: "KEY", color: "#fcc419", accent: "#fff3bf", icon: "bolt" },
+      { id: "bag", label: "BAG", color: "#51cf66", accent: "#d3f9d8", icon: "coin" },
+      { id: "bolt", label: "ZAP", color: "#ff922b", accent: "#ffe8cc", icon: "bolt" },
+      { id: "safe", label: "SAFE", color: "#748ffc", accent: "#dbe4ff", kind: "wild", icon: "safe" },
+      { id: "sc", label: "SCAT", color: "#e64980", accent: "#ffdeeb", kind: "scatter", icon: "star" },
     ],
   },
   {
     id: "raid",
     name: "Raid Spins",
-    blurb: "Fast raids · random multiplier storm",
+    blurb: "Fast Sky-style storm multipliers",
     art: "art-raid",
     theme: "raid",
     symbols: [
-      { id: "fire", label: "FIRE", color: "#ff6b4a", accent: "#ffd8ce" },
-      { id: "coin", label: "COIN", color: "#ffd43b", accent: "#fff3bf" },
-      { id: "tgt", label: "TGT", color: "#fa5252", accent: "#ffe3e3" },
-      { id: "clk", label: "CLK", color: "#845ef7", accent: "#e5dbff" },
-      { id: "wd", label: "WD", color: "#20c997", accent: "#c3fae8", kind: "wild" },
-      { id: "sc", label: "SC", color: "#f06595", accent: "#ffdeeb", kind: "scatter" },
+      { id: "fire", label: "FIRE", color: "#ff6b4a", accent: "#ffd8ce", icon: "fire" },
+      { id: "coin", label: "COIN", color: "#ffd43b", accent: "#fff3bf", icon: "coin" },
+      { id: "tgt", label: "HIT", color: "#fa5252", accent: "#ffe3e3", icon: "star" },
+      { id: "clk", label: "CLK", color: "#845ef7", accent: "#e5dbff", icon: "bolt" },
+      { id: "wd", label: "WILD", color: "#20c997", accent: "#c3fae8", kind: "wild", icon: "star" },
+      { id: "sc", label: "SCAT", color: "#f06595", accent: "#ffdeeb", kind: "scatter", icon: "star" },
     ],
   },
 ];
 
 const FEED = [
-  { id: 1, who: "Maya", color: "#ff6b4a", text: "hit Circuit Pad bonus round", when: "2m" },
-  { id: 2, who: "Rex", color: "#3d6bff", text: "Bet Boost → 18× storm", when: "8m" },
-  { id: 3, who: "Keep", color: "#ffb020", text: "Clan chest unlocked — claim soon", when: "1h" },
+  { id: 1, who: "Maya", color: "#ff5a3d", text: "unlocked Platinum trophy on Pad Live", when: "1m" },
+  { id: 2, who: "Rex", color: "#5b8cff", text: "Bet Boost → portal free spins", when: "6m" },
+  { id: 3, who: "Keep", color: "#f0c14b", text: "Clan jackpot contribution +420", when: "22m" },
 ];
 
 const FRIENDS = [
-  { id: "m", name: "Maya", status: "Online · Circuit Pad", gift: 100 },
+  { id: "m", name: "Maya", status: "Online · Platinum Pad", gift: 100 },
   { id: "r", name: "Rex", status: "In Raid Spins", gift: 250 },
   { id: "j", name: "Jules", status: "Offline", gift: 50 },
 ];
@@ -105,6 +116,14 @@ const STREAK = [
   { day: 5, done: false },
   { day: 6, done: false },
   { day: 7, done: false, bonus: true },
+];
+
+const TROPHIES = [
+  { id: "bronze", label: "Bronze", ico: "🥉" },
+  { id: "silver", label: "Silver", ico: "🥈" },
+  { id: "gold", label: "Gold", ico: "🥇" },
+  { id: "plat", label: "Platinum", ico: "💎" },
+  { id: "live", label: "Live", ico: "📡" },
 ];
 
 function formatTokens(n: number) {
@@ -132,10 +151,31 @@ export default function App() {
   const [bonusTitle, setBonusTitle] = useState("Bonus Round");
   const [bonusPicks, setBonusPicks] = useState<(number | null)[]>(Array(9).fill(null));
   const [bonusDone, setBonusDone] = useState(false);
+  const [jackpot, setJackpot] = useState(248_560);
+  const [xp, setXp] = useState(62);
+  const [level, setLevel] = useState(14);
+  const [freeSpins, setFreeSpins] = useState(0);
+  const [spinCount, setSpinCount] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [unlocked, setUnlocked] = useState<string[]>(["bronze"]);
+  const [bigWin, setBigWin] = useState<number | null>(null);
+  const [missions, setMissions] = useState<Mission[]>([
+    { id: "m1", title: "Warm-up spins", detail: "Spin 8 times today", progress: 0, target: 8, reward: 200 },
+    { id: "m2", title: "Portal hunter", detail: "Trigger 1 bonus feature", progress: 0, target: 1, reward: 350 },
+    { id: "m3", title: "Boost believer", detail: "Win with Bet Boost on", progress: 0, target: 1, reward: 250 },
+  ]);
 
   const streakDay = 4;
   const dailyReward = 500 + (streakDay - 1) * 100;
-  const stake = betBoost ? BASE_STAKE * BOOST_MULT : BASE_STAKE;
+  const stake = freeSpins > 0 ? 0 : betBoost ? BASE_STAKE * BOOST_MULT : BASE_STAKE;
+  const xpPct = Math.min(100, xp);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setJackpot((v) => v + Math.floor(Math.random() * 17) + 3);
+    }, 900);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -156,6 +196,38 @@ export default function App() {
 
   function beep(fn: () => void) {
     if (soundOn) fn();
+  }
+
+  function bumpMission(id: string, by = 1) {
+    setMissions((list) =>
+      list.map((m) => {
+        if (m.id !== id || m.progress >= m.target) return m;
+        const progress = Math.min(m.target, m.progress + by);
+        if (progress >= m.target && m.progress < m.target) {
+          setTokens((t) => t + m.reward);
+          setToast(`Mission clear +${m.reward}`);
+          beep(sfx.claim);
+        }
+        return { ...m, progress };
+      }),
+    );
+  }
+
+  function addXp(amount: number) {
+    setXp((v) => {
+      const next = v + amount;
+      if (next >= 100) {
+        setLevel((l) => l + 1);
+        setToast("Level up! Keep perks unlocked");
+        beep(sfx.winBig);
+        return next - 100;
+      }
+      return next;
+    });
+  }
+
+  function unlockTrophy(id: string) {
+    setUnlocked((u) => (u.includes(id) ? u : [...u, id]));
   }
 
   function claimDaily() {
@@ -185,6 +257,7 @@ export default function App() {
     setWinText("");
     setHighlight("none");
     setBonusOpen(false);
+    setCombo(0);
   }
 
   function startBonus(kind: "scatter" | "heist" | "storm" | "pad") {
@@ -192,19 +265,21 @@ export default function App() {
       scatter: "Scatter Free-Pick",
       heist: "Vault Heist Bonus",
       storm: "Multiplier Storm",
-      pad: "Circuit Pad Portal",
+      pad: "Platinum Portal",
     };
     setBonusTitle(titles[kind]);
     setBonusPicks(Array(9).fill(null));
     setBonusDone(false);
     setBonusOpen(true);
     setHighlight("bonus");
+    bumpMission("m2");
     beep(sfx.bonus);
+    if (kind === "pad") unlockTrophy("live");
   }
 
   function pickBonusCell(i: number) {
     if (bonusDone || bonusPicks[i] !== null) return;
-    const values = [50, 100, 150, 250, 400, 800, 50, 100, 1200];
+    const values = [50, 100, 150, 250, 400, 800, 50, 100, 1500];
     const value = values[Math.floor(Math.random() * values.length)];
     const next = [...bonusPicks];
     next[i] = value;
@@ -218,17 +293,17 @@ export default function App() {
       setBonusDone(true);
       setTokens((v) => v + boosted);
       setWinText(`Bonus banked +${boosted}`);
+      setFreeSpins((f) => f + (betBoost ? 5 : 3));
+      setBigWin(boosted);
       beep(sfx.winBig);
-      setTimeout(() => {
-        setBonusOpen(false);
-        setHighlight("win");
-      }, 900);
+      unlockTrophy(boosted >= 800 ? "plat" : "gold");
+      setTimeout(() => setBonusOpen(false), 700);
     }
   }
 
   function spin() {
     if (spinning || !activeGame || bonusOpen) return;
-    if (tokens < stake) {
+    if (freeSpins <= 0 && tokens < stake) {
       setToast(`Need ${stake} tokens to spin`);
       return;
     }
@@ -237,7 +312,17 @@ export default function App() {
     setSpinning(true);
     setWinText("");
     setHighlight("none");
-    setTokens((v) => v - stake);
+    setBigWin(null);
+
+    if (freeSpins > 0) {
+      setFreeSpins((f) => f - 1);
+    } else {
+      setTokens((v) => v - stake);
+    }
+
+    setSpinCount((c) => c + 1);
+    bumpMission("m1");
+    addXp(betBoost ? 8 : 5);
 
     const len = activeGame.symbols.length;
     let ticks = 0;
@@ -249,36 +334,29 @@ export default function App() {
         window.clearInterval(id);
         finishSpin(activeGame);
       }
-    }, 75);
+    }, 70);
   }
 
   function finishSpin(game: GameDef) {
     const len = game.symbols.length;
-    // Weighted-ish random with boost raising bonus/scatter odds
-    const rollFace = () => {
-      const r = Math.random();
-      const bonusChance = betBoost ? 0.22 : 0.11;
-      const scatterChance = betBoost ? 0.2 : 0.1;
-      if (r < bonusChance) {
-        const bonusIdx = game.symbols.findIndex((s) => s.kind === "bonus" || s.kind === "scatter");
-        if (bonusIdx >= 0 && Math.random() < 0.55) return bonusIdx;
-      }
-      if (r < bonusChance + scatterChance) {
-        const sc = game.symbols.findIndex((s) => s.kind === "scatter");
-        if (sc >= 0) return sc;
-      }
-      return randFace(len);
-    };
-
-    // Occasionally force feature for demo feel
-    const forceFeature = Math.random() < (betBoost ? 0.28 : 0.14);
+    const forceFeature = Math.random() < (betBoost ? 0.32 : 0.16);
     let final: [number, number, number];
+
     if (forceFeature) {
       const sc = game.symbols.findIndex((s) => s.kind === "scatter" || s.kind === "bonus");
       const idx = sc >= 0 ? sc : 0;
       final = [idx, idx, randFace(len)];
     } else {
-      final = [rollFace(), rollFace(), rollFace()];
+      const roll = () => {
+        const r = Math.random();
+        const bonusChance = betBoost ? 0.24 : 0.12;
+        if (r < bonusChance) {
+          const sc = game.symbols.findIndex((s) => s.kind === "scatter" || s.kind === "bonus");
+          if (sc >= 0) return sc;
+        }
+        return randFace(len);
+      };
+      final = [roll(), roll(), roll()];
     }
 
     setFaces(final);
@@ -291,45 +369,61 @@ export default function App() {
     const pair =
       landed[0].id === landed[1].id || landed[1].id === landed[2].id || landed[0].id === landed[2].id;
     const wildAssist = landed.some((s) => s.kind === "wild") && pair;
+    const randomFeature = Math.random() < (betBoost ? 0.14 : 0.07);
+    const effectiveStake = betBoost ? BASE_STAKE * BOOST_MULT : BASE_STAKE;
 
-    // Random win feature independent of reels
-    const randomFeature = Math.random() < (betBoost ? 0.12 : 0.06);
-
-    if (scatterCount >= 2 || (landed.some((s) => s.kind === "bonus") && Math.random() < 0.7)) {
+    if (scatterCount >= 2 || (landed.some((s) => s.kind === "bonus") && Math.random() < 0.75)) {
       setHighlight("scatter");
-      setWinText("SCATTER / PORTAL!");
+      setWinText("PORTAL / SCATTER LOCKED!");
+      setCombo((c) => c + 1);
       const kind =
         game.id === "console" ? "pad" : game.id === "vault" ? "heist" : game.id === "raid" ? "storm" : "scatter";
-      setTimeout(() => startBonus(kind), 450);
+      setTimeout(() => startBonus(kind), 420);
       return;
     }
 
     if (randomFeature) {
       setHighlight("bonus");
-      setWinText("RANDOM FEATURE!");
-      setTimeout(() => startBonus(game.id === "raid" ? "storm" : "scatter"), 400);
+      setWinText("RANDOM FEATURE DROP!");
+      setCombo((c) => c + 1);
+      setTimeout(() => startBonus(game.id === "raid" ? "storm" : game.id === "console" ? "pad" : "scatter"), 380);
       return;
     }
 
     if (allSame || wildAssist) {
-      const payout = Math.round(stake * (allSame ? 10 : 4) * (betBoost ? 1.25 : 1));
+      const payout = Math.round(effectiveStake * (allSame ? 12 : 5) * (1 + combo * 0.15));
       setTokens((v) => v + payout);
       setHighlight("win");
       setWinText(allSame ? `TRIPLE HIT +${payout}` : `WILD ASSIST +${payout}`);
+      setCombo((c) => c + 1);
       beep(sfx.winBig);
+      if (betBoost) bumpMission("m3");
+      if (payout >= effectiveStake * 8) setBigWin(payout);
+      if (allSame) unlockTrophy("silver");
+      // progressive bite
+      if (allSame && Math.random() < 0.2) {
+        const jp = Math.floor(jackpot * 0.02);
+        setJackpot((j) => j - jp);
+        setTokens((v) => v + jp);
+        setWinText(`JACKPOT NIBBLE +${jp}`);
+        unlockTrophy("plat");
+      }
       return;
     }
 
     if (pair) {
-      const payout = Math.round(stake * 2.2);
+      const payout = Math.round(effectiveStake * 2.4 * (1 + combo * 0.08));
       setTokens((v) => v + payout);
       setHighlight("win");
       setWinText(`LINE WIN +${payout}`);
+      setCombo((c) => c + 1);
       beep(sfx.winSmall);
+      if (betBoost) bumpMission("m3");
       return;
     }
 
-    setWinText("No win — boost for more bonus odds");
+    setCombo(0);
+    setWinText(freeSpins > 0 ? "Free spin miss — keep going" : "No win — Boost for more portals");
     beep(sfx.lose);
   }
 
@@ -338,9 +432,9 @@ export default function App() {
       <div className="stage-label">
         <h1>SpinKeep</h1>
         <p>
-          Bright social-slots mockup — 3D reels, sound, Bet Boost (2× bonus chance),
-          scatters & random bonus games. Circuit Pad is an original console theme
-          (not PlayStation-licensed).
+          Sky Vegas / Coral / BetVictor-inspired polish — chrome cabinets, progressive
+          jackpot, missions, free spins, trophies. Platinum Pad Live is an original
+          console theme (not PlayStation-licensed).
         </p>
       </div>
 
@@ -360,21 +454,20 @@ export default function App() {
                 </div>
                 <div>
                   <strong>SpinKeep</strong>
-                  <small>Lvl 14 · Gold Keep</small>
+                  <small>Lvl {level} · Gold Keep</small>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <button
-                  className={`chip${soundOn ? "" : " hot"}`}
+                  className={`chip${soundOn ? " gold" : " hot"}`}
                   onClick={() => {
                     setSoundOn((v) => !v);
                     if (!soundOn) sfx.unlock();
                   }}
-                  aria-label="Toggle sound"
                 >
                   {soundOn ? "SND" : "MUTE"}
                 </button>
-                <div className="wallet" aria-label="Token balance">
+                <div className="wallet">
                   <span className="coin" />
                   <b>{formatTokens(tokens)}</b>
                 </div>
@@ -399,29 +492,62 @@ export default function App() {
                         setBonusOpen(false);
                       }}
                     >
-                      ← Back to lobby
+                      ← Lobby
                     </button>
-                    <h2 className="page-title" style={{ marginTop: 8 }}>
-                      {activeGame.name}
-                    </h2>
+
+                    <div className="jackpot-ticker" style={{ marginTop: 8 }}>
+                      <div>
+                        <div className="label">Progressive jackpot</div>
+                        <div className="amount">{formatTokens(jackpot)}</div>
+                      </div>
+                      <span className="chip hot">{combo > 0 ? `COMBO x${combo}` : "LIVE"}</span>
+                    </div>
+
+                    <h2 className="page-title">{activeGame.name}</h2>
                     <p className="page-sub">{activeGame.blurb}</p>
 
                     <div className="slot-stage">
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
-                        <span className="chip">3D HQ demo</span>
-                        <span className="chip hot">Stake {stake}</span>
-                        {betBoost && <span className="chip boost">Boost ON</span>}
+                      <div className="hud-row">
+                        <span className="chip gold">3D HQ</span>
+                        <span className="chip hot">{freeSpins > 0 ? `FREE ${freeSpins}` : `STAKE ${stake || BASE_STAKE}`}</span>
+                        {betBoost && <span className="chip boost">BOOST</span>}
+                        <span className="chip">SPINS {spinCount}</span>
                       </div>
 
-                      <div style={{ marginTop: 10 }}>
-                        <SlotScene
-                          symbols={activeGame.symbols}
-                          faces={faces}
-                          spinning={spinning}
-                          theme={activeGame.theme}
-                          highlight={highlight}
-                        />
+                      <SlotScene
+                        symbols={activeGame.symbols}
+                        faces={faces}
+                        spinning={spinning}
+                        theme={activeGame.theme}
+                        highlight={highlight}
+                      />
+
+                      <div className="xp-card">
+                        <div className="row">
+                          <strong>Keep XP · Lvl {level}</strong>
+                          <span>{xp}/100 to next</span>
+                        </div>
+                        <div className="xp-bar">
+                          <i style={{ width: `${xpPct}%` }} />
+                        </div>
                       </div>
+
+                      {activeGame.id === "console" && (
+                        <>
+                          <div className="section-head" style={{ marginTop: 10, marginBottom: 6 }}>
+                            <h3 style={{ fontSize: "0.9rem" }}>Trophy hunt</h3>
+                            <span className="chip gold">{unlocked.length}/{TROPHIES.length}</span>
+                          </div>
+                          <div className="trophy-row">
+                            {TROPHIES.map((t) => (
+                              <div key={t.id} className={`trophy-pip${unlocked.includes(t.id) ? " on" : ""}`}>
+                                <span className="ico">{t.ico}</span>
+                                {t.label}
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
 
                       <div
                         className={`boost-toggle${betBoost ? " on" : ""}`}
@@ -438,7 +564,7 @@ export default function App() {
                       >
                         <div>
                           <strong>Bet Boost</strong>
-                          <span>2× stake · double bonus / scatter chance</span>
+                          <span>2× stake · double portal / scatter odds</span>
                         </div>
                         <div className={`switch${betBoost ? " on" : ""}`}>
                           <i />
@@ -447,32 +573,46 @@ export default function App() {
 
                       <div className="feature-row">
                         <div className="feature-card">
-                          <strong>Scatters</strong>
-                          <span>2+ SC / PORT → free-pick bonus</span>
+                          <strong>Scatters & portals</strong>
+                          <span>2+ LIVE/PORT → free-pick + free spins</span>
                         </div>
                         <div className="feature-card">
-                          <strong>Random win</strong>
-                          <span>Surprise heist / storm features</span>
+                          <strong>Random drops</strong>
+                          <span>Surprise features keep sessions sticky</span>
                         </div>
                       </div>
 
                       <div className="spin-controls">
-                        <button
-                          className="btn btn-ghost"
-                          onClick={() => setToast("Hold / nudge arrives in full build")}
-                        >
+                        <button className="btn btn-ghost" onClick={() => setToast("Hold / nudge in full build")}>
                           Hold
                         </button>
-                        <button className="btn btn-accent" onClick={spin} disabled={spinning || bonusOpen}>
-                          {spinning ? "Spinning…" : "SPIN"}
+                        <button className="btn btn-spin" onClick={spin} disabled={spinning || bonusOpen}>
+                          {spinning ? "…" : freeSpins > 0 ? "FREE SPIN" : "SPIN"}
                         </button>
                         <div className="stake">
                           Stake
-                          <b>{stake}</b>
+                          <b>{stake || "FREE"}</b>
                         </div>
                       </div>
                       <div className="win-toast">{winText}</div>
                       {activeGame.note && <p className="notice">{activeGame.note}</p>}
+                    </div>
+
+                    <div className="section-head">
+                      <h3>Daily hooks</h3>
+                    </div>
+                    <div className="mission-list">
+                      {missions.map((m) => (
+                        <div key={m.id} className={`mission-card${m.progress >= m.target ? " done" : ""}`}>
+                          <div>
+                            <strong>{m.title}</strong>
+                            <span>
+                              {m.detail} · {m.progress}/{m.target}
+                            </span>
+                          </div>
+                          <span className="chip gold">+{m.reward}</span>
+                        </div>
+                      ))}
                     </div>
                   </motion.div>
                 ) : tab === "home" ? (
@@ -482,12 +622,19 @@ export default function App() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                   >
+                    <div className="jackpot-ticker">
+                      <div>
+                        <div className="label">Network jackpot</div>
+                        <div className="amount">{formatTokens(jackpot)}</div>
+                      </div>
+                      <span className="chip hot">LIVE</span>
+                    </div>
+
                     <section className="hero-claim">
                       <div className="eyebrow">Daily Keep Bonus</div>
-                      <h2>{claimed ? "You’re stacked for today" : "Claim before it resets"}</h2>
+                      <h2>{claimed ? "Streak locked in" : "Claim before reset"}</h2>
                       <p>
-                        Day {streakDay} streak · brighter drops tomorrow. Miss a day,
-                        streak cools off.
+                        Day {streakDay} streak · Coral-punch rewards. Miss a day, heat cools.
                       </p>
                       <div className="cta-row">
                         <button
@@ -510,9 +657,9 @@ export default function App() {
 
                     <div className="section-head">
                       <h3>Your streak</h3>
-                      <span className="chip">Day {streakDay}/7</span>
+                      <span className="chip gold">Day {streakDay}/7</span>
                     </div>
-                    <div className="streak-row" aria-label="Weekly login streak">
+                    <div className="streak-row">
                       {STREAK.map((d) => (
                         <div
                           key={d.day}
@@ -524,13 +671,14 @@ export default function App() {
                     </div>
 
                     <div className="section-head">
-                      <h3>Hot games</h3>
-                      <button onClick={() => setTab("games")}>See all</button>
+                      <h3>Featured floor</h3>
+                      <button onClick={() => setTab("games")}>All games</button>
                     </div>
                     <div className="game-rail">
                       {GAMES.map((g) => (
                         <button key={g.id} className="game-tile" onClick={() => openGame(g)}>
                           <div className={`art ${g.art}`} />
+                          {g.featured && <span className="badge-live">FEATURED</span>}
                           <div className="meta">
                             <strong>{g.name}</strong>
                             <span>{g.blurb}</span>
@@ -568,18 +716,17 @@ export default function App() {
                     exit={{ opacity: 0 }}
                   >
                     <h2 className="page-title">Spin floor</h2>
-                    <p className="page-sub">
-                      3D cabinets, sound, Bet Boost, scatters & surprise bonuses.
-                    </p>
+                    <p className="page-sub">Premium cabinets · jackpots · hooks that pull you back.</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                       {GAMES.map((g) => (
                         <button
                           key={g.id}
                           className="game-tile"
-                          style={{ minHeight: 140, width: "100%" }}
+                          style={{ minHeight: 148, width: "100%" }}
                           onClick={() => openGame(g)}
                         >
                           <div className={`art ${g.art}`} />
+                          {g.featured && <span className="badge-live">FEATURED</span>}
                           <div className="meta">
                             <strong>{g.name}</strong>
                             <span>{g.blurb}</span>
@@ -597,8 +744,7 @@ export default function App() {
                     exit={{ opacity: 0 }}
                   >
                     <h2 className="page-title">Your clan</h2>
-                    <p className="page-sub">Donate, raid weekends, share chests — Clash energy.</p>
-
+                    <p className="page-sub">Shared jackpots, raid nights, gift pressure.</p>
                     <div className="clan-banner">
                       <div className="badge">VK</div>
                       <div>
@@ -616,7 +762,6 @@ export default function App() {
                         Invite
                       </button>
                     </div>
-
                     <div className="stat-strip" style={{ marginTop: 14 }}>
                       <div className="stat">
                         <b>18</b>
@@ -631,31 +776,12 @@ export default function App() {
                         <span>Local rank</span>
                       </div>
                     </div>
-
-                    <div className="section-head">
-                      <h3>Clan goals</h3>
-                    </div>
                     <div className="feed">
                       <div className="feed-item">
-                        <div className="avatar" style={{ background: "#ffb020" }}>
-                          ★
-                        </div>
+                        <div className="avatar" style={{ background: "#f0c14b" }}>★</div>
                         <div>
-                          <p>
-                            <b>Weekend raid</b> — Circuit Pad portal spins for shared loot
-                          </p>
+                          <p><b>Pad Live raid</b> — clan spins feed the network jackpot</p>
                           <time>Ends in 1d 4h</time>
-                        </div>
-                      </div>
-                      <div className="feed-item">
-                        <div className="avatar" style={{ background: "#3d6bff" }}>
-                          ⇪
-                        </div>
-                        <div>
-                          <p>
-                            <b>Donation board</b> — top gifters unlock banners
-                          </p>
-                          <time>Resets Monday</time>
                         </div>
                       </div>
                     </div>
@@ -669,13 +795,12 @@ export default function App() {
                     exit={{ opacity: 0 }}
                   >
                     <h2 className="page-title">Friends & gifts</h2>
-                    <p className="page-sub">Send tokens to pull friends back. Caps stop abuse.</p>
-
+                    <p className="page-sub">Gift tokens → pull friends online. Caps stop abuse.</p>
                     <div className="gift-list">
                       {FRIENDS.map((f) => (
                         <div className="gift-row" key={f.id}>
                           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                            <div className="avatar" style={{ background: "#3d6bff" }}>
+                            <div className="avatar" style={{ background: "#5b8cff" }}>
                               {f.name.slice(0, 1)}
                             </div>
                             <div>
@@ -693,7 +818,6 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-
                     <div className="section-head">
                       <h3>Later: token shop</h3>
                     </div>
@@ -717,7 +841,7 @@ export default function App() {
             </div>
 
             {!activeGame && (
-              <nav className="bottom-nav" aria-label="Primary">
+              <nav className="bottom-nav">
                 {nav.map((item) => (
                   <button
                     key={item.id}
@@ -736,41 +860,22 @@ export default function App() {
 
             <AnimatePresence>
               {showBonus && !claimed && !activeGame && (
-                <motion.div
-                  className="modal-backdrop"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <motion.div
-                    className="modal"
-                    initial={{ y: 40, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 30, opacity: 0 }}
-                  >
+                <motion.div className="modal-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div className="modal" initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }}>
                     <div className="reward-burst">+{dailyReward}</div>
                     <h2>Daily Keep Bonus</h2>
-                    <p>
-                      Streak day {streakDay}. Claim now — day 7 drops a mega chest.
-                    </p>
+                    <p>Streak day {streakDay}. Day 7 drops a mega chest — don’t break the chain.</p>
                     <div className="streak-row" style={{ marginBottom: 16 }}>
                       {STREAK.map((d) => (
-                        <div
-                          key={d.day}
-                          className={`day-pip${d.done ? " done" : ""}${d.today ? " today" : ""}`}
-                        >
+                        <div key={d.day} className={`day-pip${d.done ? " done" : ""}${d.today ? " today" : ""}`}>
                           {d.bonus ? "★" : d.day}
                         </div>
                       ))}
                     </div>
-                    <button className="btn btn-accent" style={{ width: "100%" }} onClick={claimDaily}>
+                    <button className="btn btn-primary" style={{ width: "100%" }} onClick={claimDaily}>
                       Claim {dailyReward} tokens
                     </button>
-                    <button
-                      className="btn btn-ghost"
-                      style={{ width: "100%", marginTop: 8 }}
-                      onClick={() => setShowBonus(false)}
-                    >
+                    <button className="btn btn-ghost" style={{ width: "100%", marginTop: 8 }} onClick={() => setShowBonus(false)}>
                       Later
                     </button>
                   </motion.div>
@@ -780,20 +885,10 @@ export default function App() {
 
             <AnimatePresence>
               {bonusOpen && (
-                <motion.div
-                  className="modal-backdrop"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <motion.div
-                    className="modal bonus-modal"
-                    initial={{ y: 40, opacity: 0, scale: 0.96 }}
-                    animate={{ y: 0, opacity: 1, scale: 1 }}
-                    exit={{ y: 24, opacity: 0 }}
-                  >
+                <motion.div className="modal-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div className="modal bonus-modal" initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 24, opacity: 0 }}>
                     <h2>{bonusTitle}</h2>
-                    <p>Pick 3 tiles. Bet Boost doubles the banked total.</p>
+                    <p>Pick 3 tiles. Boost doubles the bank · awards free spins.</p>
                     <div className="pick-grid">
                       {bonusPicks.map((v, i) => (
                         <button
@@ -817,6 +912,34 @@ export default function App() {
             </AnimatePresence>
 
             <AnimatePresence>
+              {bigWin !== null && !bonusOpen && (
+                <motion.div
+                  className="modal-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setBigWin(null)}
+                >
+                  <motion.div
+                    className="modal bigwin-modal"
+                    initial={{ scale: 0.85, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                  >
+                    <div className="eyebrow" style={{ color: "#ffb09e", letterSpacing: "0.16em", fontWeight: 800, fontSize: "0.7rem" }}>
+                      BIG WIN
+                    </div>
+                    <h2 style={{ fontSize: "2rem", color: "#ffd28a" }}>+{formatTokens(bigWin)}</h2>
+                    <p>That’s the hook. Spin again while the combo’s hot.</p>
+                    <button className="btn btn-spin" style={{ width: "100%" }} onClick={() => setBigWin(null)}>
+                      Keep spinning
+                    </button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
               {toast && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -831,11 +954,10 @@ export default function App() {
                     textAlign: "center",
                     padding: "10px 12px",
                     borderRadius: 12,
-                    background: "rgba(255,255,255,0.94)",
-                    border: "1px solid rgba(255,107,74,0.35)",
+                    background: "rgba(8,12,28,0.94)",
+                    border: "1px solid rgba(240,193,75,0.4)",
                     fontSize: "0.82rem",
                     fontWeight: 700,
-                    boxShadow: "0 10px 24px rgba(40,60,100,0.12)",
                   }}
                 >
                   {toast}
@@ -847,11 +969,10 @@ export default function App() {
       </div>
 
       <div className="legend">
-        <span>Bright UI</span>
-        <span>3D reels + SFX</span>
-        <span>Bet Boost</span>
-        <span>Scatter / random bonuses</span>
-        <span>Circuit Pad (original)</span>
+        <span>UK casino gloss</span>
+        <span>Platinum Pad Live</span>
+        <span>Jackpot · XP · missions</span>
+        <span>Free spins · trophies</span>
       </div>
     </div>
   );

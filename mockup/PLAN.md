@@ -17,23 +17,27 @@ Players open the app every day for the streak claim, spin a few rounds, gift fri
 | Progression | Player level + Keep tier (cosmetic + soft perks) |
 | Later IAP | Buy token packs when soft currency runs low |
 
-## Screens in this mockup
+## Visual direction (latest)
 
-1. **Daily claim modal** — first thing on open  
-2. **Keep (home)** — streak, hot games, activity feed  
-3. **Spins** — multi-game lobby + playable **3D** cabinets with SFX  
-4. **Bet Boost** — 2× stake, double bonus/scatter chance  
-5. **Scatter / random bonuses** — free-pick feature rounds  
-6. **Circuit Pad** — original console-cabinet theme (not PlayStation-licensed)  
-7. **Clan** — membership, stats, goals  
-8. **Gifts** — friends list + send tokens; shop placeholder  
+Premium **UK social-casino** gloss (Sky Vegas / Coral / BetVictor energy):
+chrome bezels, LED chase lights, progressive jackpot ticker, coral CTAs,
+gold chrome, navy velvet cabinets.
+
+### Engagement hooks on cabinets
+
+- Progressive jackpot ticker
+- Keep XP / level bar
+- Daily missions with token rewards
+- Bet Boost (2× stake, double feature odds)
+- Scatter / portal free-pick + free spins
+- Combo meter + Big Win splash
+- Trophy hunt on **Platinum Pad Live** (original console theme)
 
 ### PlayStation / licensed IP
 
 Official PlayStation logos, wordmarks, and face-button sets are Sony trademarks.
-This mock uses an **original** console theme (**Circuit Pad**) so we can ship
-without a license. If you later want real PlayStation branding, that needs a
-Sony deal — we should not ship trademarked assets without one.  
+**Platinum Pad Live** is original console-cabinet art so we can ship without a
+license. Real PlayStation branding needs a Sony deal.  
 
 ## Build phases after mockup sign-off
 
