@@ -65,11 +65,15 @@ export const api = {
   claimDaily: () => request<{ reward: number; user: ApiUser }>("/daily/claim", { method: "POST", body: "{}" }),
   spin: (stake: number, boost: boolean, gameId: string, freeSpin = false) =>
     request<{
-      grid: { id: string; kind: string }[][];
+      grid: { id: string; kind: string; value?: number }[][];
       payout: number;
       wins: string[];
       scatters: number;
       feature: boolean;
+      collected: number;
+      moneyCells: string[];
+      wildCells: string[];
+      freeSpinsAwarded: number;
       cost: number;
       user: ApiUser;
     }>("/spin", {

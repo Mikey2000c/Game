@@ -5,6 +5,7 @@ import {
   buildGrid,
   type GridSymbol,
 } from "./SlotMachine";
+import { BonusGame, type BonusKind } from "./BonusGames";
 import { AuthFlow } from "./AuthFlow";
 import { api, getToken, setToken, type ApiUser } from "./api";
 import { sfx } from "./audio";
@@ -37,11 +38,20 @@ type Mission = {
 
 const BET_STEPS = [0.1, 0.2, 0.5, 1, 2, 5];
 
+const CASH_SYM: GridSymbol = {
+  id: "cash",
+  label: "CASH",
+  color: "#fcc419",
+  accent: "#fff3bf",
+  kind: "money",
+  glyph: "$",
+};
+
 const GAMES: GameDef[] = [
   {
     id: "console",
     name: "Platinum Pad Live",
-    blurb: "5×3 console cabinet · trophies, portals, free spins",
+    blurb: "Staggered 5×3 · portal mini-game · trophy wild collects cash",
     art: "art-console",
     image: "/tiles/pad.jpg",
     badge: "FEATURED",
@@ -49,78 +59,82 @@ const GAMES: GameDef[] = [
     featured: true,
     note: "Original console theme — not affiliated with Sony or PlayStation.",
     symbols: [
-      { id: "pad", label: "PAD", color: "#3d6bff", accent: "#b6c7ff", glyph: "🎮" },
-      { id: "disc", label: "DISC", color: "#868e96", accent: "#dee2e6", glyph: "💿" },
-      { id: "cart", label: "CART", color: "#15aabf", accent: "#99e9f2", glyph: "📦" },
-      { id: "audio", label: "AUDIO", color: "#ff6b4a", accent: "#ffc9b8", glyph: "🎧" },
+      { id: "pad", label: "PAD", color: "#3d6bff", accent: "#b6c7ff", glyph: "P" },
+      { id: "disc", label: "DISC", color: "#868e96", accent: "#dee2e6", glyph: "D" },
+      { id: "cart", label: "CART", color: "#15aabf", accent: "#99e9f2", glyph: "C" },
+      { id: "audio", label: "AUDIO", color: "#ff6b4a", accent: "#ffc9b8", glyph: "A" },
       { id: "ten", label: "10", color: "#845ef7", accent: "#e5dbff", glyph: "10" },
       { id: "j", label: "J", color: "#339af0", accent: "#a5d8ff", glyph: "J" },
       { id: "q", label: "Q", color: "#51cf66", accent: "#b2f2bb", glyph: "Q" },
       { id: "k", label: "K", color: "#ff6b6b", accent: "#ffc9c9", glyph: "K" },
-      { id: "plat", label: "PLAT", color: "#fab005", accent: "#ffe8a3", kind: "wild", glyph: "💎" },
-      { id: "port", label: "PORT", color: "#7950f2", accent: "#d0bfff", kind: "bonus", glyph: "🌀" },
-      { id: "live", label: "LIVE", color: "#ff922b", accent: "#ffe8a3", kind: "scatter", glyph: "📡" },
+      CASH_SYM,
+      { id: "plat", label: "PLAT", color: "#fab005", accent: "#ffe8a3", kind: "wild", glyph: "W" },
+      { id: "port", label: "PORT", color: "#7950f2", accent: "#d0bfff", kind: "bonus", glyph: "B" },
+      { id: "live", label: "LIVE", color: "#ff922b", accent: "#ffe8a3", kind: "scatter", glyph: "S" },
     ],
   },
   {
     id: "fruit",
     name: "Neon Orchard",
-    blurb: "Fishin’-style fruit frenzy · scatters & free picks",
+    blurb: "Bass-style reel physics · money fish · angler free spins",
     art: "art-fruit",
     image: "/tiles/orchard.jpg",
     badge: "HOT",
     theme: "orchard",
     symbols: [
-      { id: "fish", label: "FISH", color: "#339af0", accent: "#a5d8ff", glyph: "🐟" },
-      { id: "bird", label: "BIRD", color: "#fff", accent: "#ffc9c9", glyph: "🐦" },
-      { id: "ring", label: "RING", color: "#ff6b6b", accent: "#ffe3e3", glyph: "⭕" },
-      { id: "ch", label: "CHERRY", color: "#fa5252", accent: "#ffc9c9", glyph: "🍒" },
-      { id: "lm", label: "LEMON", color: "#ffd43b", accent: "#fff3bf", glyph: "🍋" },
+      { id: "fish", label: "FISH", color: "#339af0", accent: "#a5d8ff", glyph: "F" },
+      { id: "bird", label: "BIRD", color: "#fff", accent: "#ffc9c9", glyph: "B" },
+      { id: "ring", label: "RING", color: "#ff6b6b", accent: "#ffe3e3", glyph: "R" },
+      { id: "ch", label: "CHERRY", color: "#fa5252", accent: "#ffc9c9", glyph: "C" },
+      { id: "lm", label: "LEMON", color: "#ffd43b", accent: "#fff3bf", glyph: "L" },
       { id: "ten", label: "10", color: "#845ef7", accent: "#e5dbff", glyph: "10" },
       { id: "j", label: "J", color: "#339af0", accent: "#a5d8ff", glyph: "J" },
       { id: "q", label: "Q", color: "#51cf66", accent: "#b2f2bb", glyph: "Q" },
       { id: "k", label: "K", color: "#ff6b6b", accent: "#ffc9c9", glyph: "K" },
-      { id: "wd", label: "WILD", color: "#20c997", accent: "#c3fae8", kind: "wild", glyph: "⭐" },
-      { id: "sc", label: "SCATTER", color: "#ff922b", accent: "#ffe8a3", kind: "scatter", glyph: "🌅" },
+      CASH_SYM,
+      { id: "wd", label: "WILD", color: "#20c997", accent: "#c3fae8", kind: "wild", glyph: "W" },
+      { id: "sc", label: "SCATTER", color: "#ff922b", accent: "#ffe8a3", kind: "scatter", glyph: "S" },
     ],
   },
   {
     id: "vault",
     name: "Vault Rush",
-    blurb: "5×3 vault trail · progressive jackpot bites",
+    blurb: "Chrome reels · vault-crack mini-game · safe collects cash",
     art: "art-vault",
     image: "/tiles/vault.jpg",
     badge: "JACKPOT",
     theme: "vault",
     symbols: [
-      { id: "gem", label: "GEM", color: "#22b8cf", accent: "#c5f6fa", glyph: "💎" },
-      { id: "key", label: "KEY", color: "#fcc419", accent: "#fff3bf", glyph: "🔑" },
-      { id: "bag", label: "BAG", color: "#51cf66", accent: "#d3f9d8", glyph: "💰" },
-      { id: "bolt", label: "ZAP", color: "#ff922b", accent: "#ffe8cc", glyph: "⚡" },
+      { id: "gem", label: "GEM", color: "#22b8cf", accent: "#c5f6fa", glyph: "G" },
+      { id: "key", label: "KEY", color: "#fcc419", accent: "#fff3bf", glyph: "K" },
+      { id: "bag", label: "BAG", color: "#51cf66", accent: "#d3f9d8", glyph: "B" },
+      { id: "bolt", label: "ZAP", color: "#ff922b", accent: "#ffe8cc", glyph: "Z" },
       { id: "ten", label: "10", color: "#845ef7", accent: "#e5dbff", glyph: "10" },
       { id: "j", label: "J", color: "#339af0", accent: "#a5d8ff", glyph: "J" },
       { id: "q", label: "Q", color: "#51cf66", accent: "#b2f2bb", glyph: "Q" },
-      { id: "safe", label: "SAFE", color: "#748ffc", accent: "#dbe4ff", kind: "wild", glyph: "🔐" },
-      { id: "sc", label: "SCAT", color: "#e64980", accent: "#ffdeeb", kind: "scatter", glyph: "🌅" },
+      CASH_SYM,
+      { id: "safe", label: "SAFE", color: "#748ffc", accent: "#dbe4ff", kind: "wild", glyph: "W" },
+      { id: "sc", label: "SCAT", color: "#e64980", accent: "#ffdeeb", kind: "scatter", glyph: "S" },
     ],
   },
   {
     id: "raid",
     name: "Raid Spins",
-    blurb: "Fast 5×3 storm · random multipliers",
+    blurb: "Anticipation stops · storm wheel · wild money multipliers",
     art: "art-raid",
     image: "/tiles/raid.jpg",
     badge: "NEW",
     theme: "raid",
     symbols: [
-      { id: "fire", label: "FIRE", color: "#ff6b4a", accent: "#ffd8ce", glyph: "🔥" },
-      { id: "coin", label: "COIN", color: "#ffd43b", accent: "#fff3bf", glyph: "🪙" },
-      { id: "hit", label: "HIT", color: "#fa5252", accent: "#ffe3e3", glyph: "🎯" },
+      { id: "fire", label: "FIRE", color: "#ff6b4a", accent: "#ffd8ce", glyph: "F" },
+      { id: "coin", label: "COIN", color: "#ffd43b", accent: "#fff3bf", glyph: "$" },
+      { id: "hit", label: "HIT", color: "#fa5252", accent: "#ffe3e3", glyph: "H" },
       { id: "ten", label: "10", color: "#845ef7", accent: "#e5dbff", glyph: "10" },
       { id: "j", label: "J", color: "#339af0", accent: "#a5d8ff", glyph: "J" },
       { id: "q", label: "Q", color: "#51cf66", accent: "#b2f2bb", glyph: "Q" },
-      { id: "wd", label: "WILD", color: "#20c997", accent: "#c3fae8", kind: "wild", glyph: "⭐" },
-      { id: "sc", label: "SCAT", color: "#f06595", accent: "#ffdeeb", kind: "scatter", glyph: "🌅" },
+      CASH_SYM,
+      { id: "wd", label: "WILD", color: "#20c997", accent: "#c3fae8", kind: "wild", glyph: "W" },
+      { id: "sc", label: "SCAT", color: "#f06595", accent: "#ffdeeb", kind: "scatter", glyph: "S" },
     ],
   },
 ];
@@ -170,10 +184,21 @@ export default function App() {
   const [betIndex, setBetIndex] = useState(2);
   const [bonusOpen, setBonusOpen] = useState(false);
   const [bonusTitle, setBonusTitle] = useState("Bonus Round");
-  const [bonusPicks, setBonusPicks] = useState<(number | null)[]>(Array(9).fill(null));
-  const [bonusDone, setBonusDone] = useState(false);
+  const [bonusKind, setBonusKind] = useState<BonusKind>("angler");
   const [jackpot, setJackpot] = useState(248_560);
   const [freeSpins, setFreeSpins] = useState(0);
+  const [moneyCells, setMoneyCells] = useState<Set<string>>(new Set());
+  const [pendingResult, setPendingResult] = useState<null | {
+    payout: number;
+    wins: string[];
+    scatters: number;
+    feature: boolean;
+    collected: number;
+    moneyCells: string[];
+    freeSpinsAwarded: number;
+    usingFree: boolean;
+  }>(null);
+  const [landToken, setLandToken] = useState(0);
   const [spinCount, setSpinCount] = useState(0);
   const [combo, setCombo] = useState(0);
   const [unlocked, setUnlocked] = useState<string[]>(["bronze"]);
@@ -310,55 +335,41 @@ export default function App() {
     setGrid(buildGrid(g.symbols));
     setMessage("Good Luck!");
     setWinCells(new Set());
+    setMoneyCells(new Set());
     setBonusOpen(false);
+    setPendingResult(null);
     setCombo(0);
+    setFreeSpins(0);
   }
 
-  function startBonus(kind: "scatter" | "heist" | "storm" | "pad") {
-    const titles = {
-      scatter: "Scatter Free-Pick",
-      heist: "Vault Heist Bonus",
+  function startBonus(kind: BonusKind) {
+    const titles: Record<BonusKind, string> = {
+      angler: "Angler's Catch",
+      heist: "Vault Crack",
       storm: "Multiplier Storm",
       pad: "Platinum Portal",
     };
+    setBonusKind(kind);
     setBonusTitle(titles[kind]);
-    setBonusPicks(Array(9).fill(null));
-    setBonusDone(false);
     setBonusOpen(true);
     bumpMission("m2");
     beep(sfx.bonus);
     if (kind === "pad") unlockTrophy("live");
   }
 
-  function pickBonusCell(i: number) {
-    if (bonusDone || bonusPicks[i] !== null) return;
-    const values = [50, 100, 150, 250, 400, 800, 50, 100, 1500];
-    const value = values[Math.floor(Math.random() * values.length)];
-    const next = [...bonusPicks];
-    next[i] = value;
-    setBonusPicks(next);
-    beep(sfx.click);
-
-    const revealed = next.filter((v) => v !== null).length;
-    if (revealed >= 3) {
-      const total = next.reduce<number>((sum, v) => sum + (v ?? 0), 0);
-      const boosted = betBoost ? total * 2 : total;
-      setBonusDone(true);
-      // Scatter payout already credited by /spin — pick UI awards free spins only
-      setMessage(`Portal cleared · +${betBoost ? 5 : 3} free spins!`);
-      setFreeSpins((f) => f + (betBoost ? 5 : 3));
-      setBigWin(boosted);
-      beep(sfx.winBig);
-      unlockTrophy(boosted >= 800 ? "plat" : "gold");
-      setTimeout(() => setBonusOpen(false), 700);
-    }
-  }
-
-  function mapServerGrid(game: GameDef, raw: { id: string; kind: string }[][]): GridSymbol[][] {
+  function mapServerGrid(
+    game: GameDef,
+    raw: { id: string; kind: string; value?: number }[][],
+  ): GridSymbol[][] {
     return raw.map((col) =>
       col.map((cell) => {
         const byId = game.symbols.find((s) => s.id === cell.id);
-        if (byId) return byId;
+        if (byId) {
+          return cell.value != null ? { ...byId, value: cell.value } : byId;
+        }
+        if (cell.kind === "money") {
+          return { ...CASH_SYM, value: cell.value ?? 1 };
+        }
         if (cell.kind === "wild") {
           return game.symbols.find((s) => s.kind === "wild") || game.symbols[0]!;
         }
@@ -374,8 +385,70 @@ export default function App() {
     );
   }
 
+  function resolvePending() {
+    const res = pendingResult;
+    if (!res || !activeGame) {
+      setSpinning(false);
+      return;
+    }
+    setPendingResult(null);
+    setSpinning(false);
+    beep(sfx.reelStop);
+
+    setWinCells(new Set(res.wins));
+    setMoneyCells(new Set(res.moneyCells));
+
+    if (res.usingFree) setFreeSpins((f) => Math.max(0, f - 1));
+    if (res.freeSpinsAwarded > 0) {
+      setFreeSpins((f) => f + res.freeSpinsAwarded);
+    }
+
+    if (res.feature) {
+      setMessage(`${res.scatters} SCATTERS! Mini-game unlocked`);
+      setCombo((c) => c + 1);
+      beep(sfx.winBig);
+      const kind: BonusKind =
+        activeGame.id === "console"
+          ? "pad"
+          : activeGame.id === "vault"
+            ? "heist"
+            : activeGame.id === "raid"
+              ? "storm"
+              : "angler";
+      window.setTimeout(() => startBonus(kind), 550);
+      return;
+    }
+
+    if (res.collected > 0) {
+      setMessage(`COLLECT +${res.collected}!`);
+      setCombo((c) => c + 1);
+      beep(sfx.winBig);
+      if (res.payout >= chargeTokens * 8) {
+        setBigWin(res.payout);
+        unlockTrophy("plat");
+      }
+      return;
+    }
+
+    if (res.payout > 0) {
+      setMessage(`WIN ${res.payout}!`);
+      setCombo((c) => c + 1);
+      beep(res.payout >= chargeTokens * 8 ? sfx.winBig : sfx.winSmall);
+      if (betBoost) bumpMission("m3");
+      if (res.payout >= chargeTokens * 8) {
+        setBigWin(res.payout);
+        unlockTrophy("silver");
+      }
+      return;
+    }
+
+    setCombo(0);
+    setMessage(res.usingFree ? "Free spin — good luck!" : "Good Luck!");
+    beep(sfx.lose);
+  }
+
   function spin() {
-    if (spinning || !activeGame || bonusOpen) return;
+    if (spinning || !activeGame || bonusOpen || pendingResult) return;
     const usingFree = freeSpins > 0;
     if (!usingFree && tokens < chargeTokens) {
       setToast(`Need ${chargeTokens} tokens`);
@@ -385,64 +458,32 @@ export default function App() {
     beep(sfx.spinStart);
     setSpinning(true);
     setWinCells(new Set());
-    setMessage("Good Luck!");
+    setMoneyCells(new Set());
+    setMessage(usingFree ? "Free spin…" : "Good Luck!");
     setBigWin(null);
     setSpinCount((c) => c + 1);
     bumpMission("m1");
 
     void (async () => {
       try {
-        // animate locally while server resolves
-        const anim = window.setInterval(() => {
-          setGrid(buildGrid(activeGame.symbols));
-        }, 70);
-
         const res = await api.spin(stakeTokens, betBoost, activeGame.id, usingFree);
-        window.clearInterval(anim);
-
         const final = mapServerGrid(activeGame, res.grid);
-        setGrid(final);
-        setSpinning(false);
         applyUser(res.user);
-        beep(sfx.reelStop);
-
-        if (usingFree) setFreeSpins((f) => Math.max(0, f - 1));
-
-        if (res.feature || res.scatters >= 3) {
-          setWinCells(new Set(res.wins));
-          setMessage(`${res.scatters} SCATTERS! Feature unlocked`);
-          setCombo((c) => c + 1);
-          beep(sfx.winBig);
-          const kind =
-            activeGame.id === "console"
-              ? "pad"
-              : activeGame.id === "vault"
-                ? "heist"
-                : activeGame.id === "raid"
-                  ? "storm"
-                  : "scatter";
-          setTimeout(() => startBonus(kind), 500);
-          return;
-        }
-
-        if (res.payout > 0) {
-          setWinCells(new Set(res.wins));
-          setMessage(`WIN ${res.payout}!`);
-          setCombo((c) => c + 1);
-          beep(res.payout >= chargeTokens * 8 ? sfx.winBig : sfx.winSmall);
-          if (betBoost) bumpMission("m3");
-          if (res.payout >= chargeTokens * 8) {
-            setBigWin(res.payout);
-            unlockTrophy("silver");
-          }
-          return;
-        }
-
-        setCombo(0);
-        setMessage("Good Luck!");
-        beep(sfx.lose);
+        setPendingResult({
+          payout: res.payout,
+          wins: res.wins,
+          scatters: res.scatters,
+          feature: res.feature,
+          collected: res.collected ?? 0,
+          moneyCells: res.moneyCells ?? [],
+          freeSpinsAwarded: res.freeSpinsAwarded ?? 0,
+          usingFree,
+        });
+        setGrid(final);
+        setLandToken((n) => n + 1);
       } catch (e) {
         setSpinning(false);
+        setPendingResult(null);
         setToast(e instanceof Error ? e.message : "Spin failed");
         beep(sfx.lose);
       }
@@ -549,12 +590,26 @@ export default function App() {
                         grid={grid}
                         spinning={spinning}
                         winCells={winCells}
+                        moneyCells={moneyCells}
                         message={message}
                         credit={tokens / 100}
                         bet={bet}
                         freeSpins={freeSpins}
                         boostOn={betBoost}
+                        featureLabel={
+                          freeSpins > 0
+                            ? activeGame.id === "fruit"
+                              ? "ANGLER FREE SPINS"
+                              : activeGame.id === "vault"
+                                ? "VAULT FREE SPINS"
+                                : activeGame.id === "raid"
+                                  ? "STORM FREE SPINS"
+                                  : "PORTAL FREE SPINS"
+                            : undefined
+                        }
+                        landToken={landToken}
                         onSpin={spin}
+                        onReelsLanded={resolvePending}
                         onBetUp={() => {
                           beep(sfx.click);
                           setBetIndex((i) => Math.min(BET_STEPS.length - 1, i + 1));
@@ -954,29 +1009,19 @@ export default function App() {
 
             <AnimatePresence>
               {bonusOpen && (
-                <motion.div className="modal-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <motion.div className="modal bonus-modal" initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 24, opacity: 0 }}>
-                    <h2>{bonusTitle}</h2>
-                    <p>Pick 3 tiles. Boost doubles the bank · awards free spins.</p>
-                    <div className="pick-grid">
-                      {bonusPicks.map((v, i) => (
-                        <button
-                          key={i}
-                          className={`pick-cell${v !== null ? " revealed" : ""}`}
-                          onClick={() => pickBonusCell(i)}
-                          disabled={bonusDone}
-                        >
-                          {v === null ? "?" : v}
-                        </button>
-                      ))}
-                    </div>
-                    {bonusDone && (
-                      <button className="btn btn-blue" style={{ width: "100%" }} onClick={() => setBonusOpen(false)}>
-                        Back to reels
-                      </button>
-                    )}
-                  </motion.div>
-                </motion.div>
+                <BonusGame
+                  kind={bonusKind}
+                  title={bonusTitle}
+                  onClose={() => setBonusOpen(false)}
+                  onComplete={({ freeSpins: fs, label }) => {
+                    setFreeSpins((f) => f + fs);
+                    setMessage(label);
+                    setToast(label);
+                    beep(sfx.winBig);
+                    unlockTrophy(fs >= 20 ? "plat" : "gold");
+                    window.setTimeout(() => setBonusOpen(false), 400);
+                  }}
+                />
               )}
             </AnimatePresence>
 

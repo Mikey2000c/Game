@@ -198,13 +198,18 @@ app.post("/spin", { preHandler: requireUser }, async (request, reply) => {
 
   // Evaluate against charged stake (or base stake on free spins)
   const evalStake = cost > 0 ? cost : body.stake;
-  const grid = spinReels(body.boost, body.gameId);
-  const result = evaluateSpin(grid, evalStake);
+  const grid = spinReels(body.boost, body.gameId, body.freeSpin);
+  const result = evaluateSpin(grid, evalStake, {
+    freeSpin: body.freeSpin,
+    gameId: body.gameId,
+  });
 
   if (result.payout > 0) {
     credit(db, user.id, result.payout, result.feature ? "bonus" : "spin_win", {
       gameId: body.gameId,
       scatters: result.scatters,
+      collected: result.collected,
+      freeSpinsAwarded: result.freeSpinsAwarded,
     });
   }
 

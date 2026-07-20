@@ -138,6 +138,25 @@ export function IconCoin({ className }: IconProps) {
   );
 }
 
+/** Money-fish / cash symbol for collect features */
+export function IconCashFish({ className }: IconProps) {
+  const id = useId();
+  return (
+    <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden>
+      <defs>
+        <linearGradient id={id} x1="8" y1="10" x2="56" y2="54">
+          <stop stopColor="#ffe066" />
+          <stop offset="1" stopColor="#f08c00" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="30" cy="34" rx="20" ry="13" fill={`url(#${id})`} stroke="#fff" strokeWidth="2" />
+      <path d="M46 34 L58 24 V44 Z" fill="#fab005" stroke="#fff" strokeWidth="1.5" />
+      <circle cx="22" cy="30" r="2.5" fill="#0b1020" />
+      <text x="30" y="39" textAnchor="middle" fontSize="11" fontWeight="800" fill="#7a4f01" fontFamily="Syne,sans-serif">$</text>
+    </svg>
+  );
+}
+
 export function IconStar({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden>
@@ -314,6 +333,8 @@ const MAP: Record<string, () => ReactNode> = {
   k: () => <IconLetter letter="K" color="#ff6b6b" className="sym-svg" />,
   bn: () => <IconCoin className="sym-svg" />,
   clk: () => <IconBolt className="sym-svg" />,
+  cash: () => <IconCashFish className="sym-svg" />,
+  money: () => <IconCashFish className="sym-svg" />,
 };
 
 export function SymbolIcon({ id }: { id: string }) {

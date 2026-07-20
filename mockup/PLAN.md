@@ -31,9 +31,15 @@ gold chrome, navy velvet cabinets.
 
 - Progressive jackpot ticker
 - Keep XP / level bar
-- Daily missions with token rewards
-- Bet Boost (2× stake, double feature odds)
-- Scatter / portal free-pick + free spins
+- Daily missions (cosmetic progress; wallet is server-side)
+- Bet Boost (2× stake, higher feature / money odds)
+- **Big-Bass-style reel physics**: staggered L→R strip stops, bounce land, anticipation on reel 5
+- **Money symbols** collected by wilds during free spins (server-authoritative)
+- Distinct mini-games per cabinet:
+  - Neon Orchard → Angler's Catch
+  - Vault Rush → Vault Crack
+  - Raid Spins → Multiplier Storm wheel
+  - Platinum Pad → Portal Pick
 - Combo meter + Big Win splash
 - Trophy hunt on **Platinum Pad Live** (original console theme)
 
