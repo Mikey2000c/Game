@@ -199,6 +199,7 @@ export default function App() {
     usingFree: boolean;
   }>(null);
   const [landToken, setLandToken] = useState(0);
+  const [lastWinAmount, setLastWinAmount] = useState(0);
   const [spinCount, setSpinCount] = useState(0);
   const [combo, setCombo] = useState(0);
   const [unlocked, setUnlocked] = useState<string[]>(["bronze"]);
@@ -340,6 +341,7 @@ export default function App() {
     setPendingResult(null);
     setCombo(0);
     setFreeSpins(0);
+    setLastWinAmount(0);
   }
 
   function startBonus(kind: BonusKind) {
@@ -397,6 +399,7 @@ export default function App() {
 
     setWinCells(new Set(res.wins));
     setMoneyCells(new Set(res.moneyCells));
+    setLastWinAmount(res.payout);
 
     if (res.usingFree) setFreeSpins((f) => Math.max(0, f - 1));
     if (res.freeSpinsAwarded > 0) {
@@ -459,6 +462,7 @@ export default function App() {
     setSpinning(true);
     setWinCells(new Set());
     setMoneyCells(new Set());
+    setLastWinAmount(0);
     setMessage(usingFree ? "Free spin…" : "Good Luck!");
     setBigWin(null);
     setSpinCount((c) => c + 1);
@@ -568,9 +572,12 @@ export default function App() {
                         beep(sfx.click);
                         setActiveGame(null);
                         setBonusOpen(false);
+                        setPendingResult(null);
+                        setSpinning(false);
+                        setTab("slots");
                       }}
                     >
-                      ← Lobby
+                      ← All slots
                     </button>
 
                     <div className="jackpot-ticker" style={{ marginTop: 8 }}>
@@ -592,10 +599,12 @@ export default function App() {
                         winCells={winCells}
                         moneyCells={moneyCells}
                         message={message}
+                        lastWin={lastWinAmount}
                         credit={tokens / 100}
                         bet={bet}
                         freeSpins={freeSpins}
                         boostOn={betBoost}
+                        soundOn={soundOn}
                         featureLabel={
                           freeSpins > 0
                             ? activeGame.id === "fruit"
@@ -610,6 +619,9 @@ export default function App() {
                         landToken={landToken}
                         onSpin={spin}
                         onReelsLanded={resolvePending}
+                        onReelStop={() => {
+                          if (soundOn) sfx.reelStop();
+                        }}
                         onBetUp={() => {
                           beep(sfx.click);
                           setBetIndex((i) => Math.min(BET_STEPS.length - 1, i + 1));
@@ -971,23 +983,27 @@ export default function App() {
               </AnimatePresence>
             </div>
 
-            {!activeGame && (
-              <nav className="bottom-nav">
-                {nav.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`nav-btn${tab === item.id ? " active" : ""}`}
-                    onClick={() => {
-                      beep(sfx.click);
-                      setTab(item.id);
-                    }}
-                  >
-                    <span className="ico">{item.ico}</span>
-                    {item.label}
-                  </button>
-                ))}
-              </nav>
-            )}
+            <nav className="bottom-nav">
+              {nav.map((item) => (
+                <button
+                  key={item.id}
+                  className={`nav-btn${tab === item.id && !activeGame ? " active" : ""}${activeGame && item.id === "slots" ? " active" : ""}`}
+                  onClick={() => {
+                    beep(sfx.click);
+                    if (activeGame) {
+                      setActiveGame(null);
+                      setBonusOpen(false);
+                      setPendingResult(null);
+                      setSpinning(false);
+                    }
+                    setTab(item.id);
+                  }}
+                >
+                  <span className="ico">{item.ico}</span>
+                  {item.label}
+                </button>
+              ))}
+            </nav>
 
             <AnimatePresence>
               {showBonus && !claimed && !activeGame && (
