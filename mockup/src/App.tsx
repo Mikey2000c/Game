@@ -1,41 +1,98 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { SlotScene, type ReelSymbol } from "./SlotScene";
+import { sfx } from "./audio";
 import "./index.css";
 
 type Tab = "home" | "games" | "clan" | "social";
+type Theme = "orchard" | "vault" | "console" | "raid";
 
-const GAMES = [
+type GameDef = {
+  id: string;
+  name: string;
+  blurb: string;
+  art: string;
+  theme: Theme;
+  symbols: ReelSymbol[];
+  note?: string;
+};
+
+const BASE_STAKE = 50;
+const BOOST_MULT = 2;
+
+const GAMES: GameDef[] = [
   {
     id: "fruit",
     name: "Neon Orchard",
-    blurb: "Classic fruit reels · nudge & hold",
+    blurb: "Fruit reels · scatters unlock fruit frenzy",
     art: "art-fruit",
-    emoji: ["🍒", "🍋", "🔔"],
+    theme: "orchard",
+    symbols: [
+      { id: "ch", label: "CH", color: "#ff6b6b", accent: "#ffd6d6" },
+      { id: "lm", label: "LM", color: "#ffd43b", accent: "#fff3bf" },
+      { id: "bl", label: "BL", color: "#748ffc", accent: "#dbe4ff" },
+      { id: "bn", label: "BN", color: "#ff922b", accent: "#ffe8cc" },
+      { id: "wd", label: "WD", color: "#20c997", accent: "#c3fae8", kind: "wild" },
+      { id: "sc", label: "SC", color: "#f06595", accent: "#ffdeeb", kind: "scatter" },
+    ],
+  },
+  {
+    id: "console",
+    name: "Circuit Pad",
+    blurb: "Original console-cabinet theme · pad, disc, trophy reels",
+    art: "art-console",
+    theme: "console",
+    note: "Original art only — not affiliated with Sony or PlayStation. Official console brands need a license.",
+    symbols: [
+      { id: "pad", label: "PAD", color: "#3d6bff", accent: "#d0dbff" },
+      { id: "disc", label: "DISC", color: "#868e96", accent: "#e9ecef" },
+      { id: "cart", label: "CART", color: "#15aabf", accent: "#c5f6fa" },
+      { id: "joy", label: "JOY", color: "#ff6b4a", accent: "#ffd8ce" },
+      { id: "cup", label: "CUP", color: "#fab005", accent: "#fff3bf", kind: "wild" },
+      { id: "port", label: "PORT", color: "#7950f2", accent: "#e5dbff", kind: "bonus" },
+      { id: "sc", label: "SC", color: "#ff4fd8", accent: "#ffd6f5", kind: "scatter" },
+    ],
   },
   {
     id: "vault",
     name: "Vault Rush",
-    blurb: "Jackpot trail · clan boosts",
+    blurb: "Jackpot trail · random vault heist bonus",
     art: "art-vault",
-    emoji: ["💎", "🔐", "⚡"],
+    theme: "vault",
+    symbols: [
+      { id: "gem", label: "GEM", color: "#22b8cf", accent: "#c5f6fa" },
+      { id: "key", label: "KEY", color: "#fcc419", accent: "#fff3bf" },
+      { id: "bag", label: "BAG", color: "#51cf66", accent: "#d3f9d8" },
+      { id: "bolt", label: "ZAP", color: "#ff922b", accent: "#ffe8cc" },
+      { id: "safe", label: "SAFE", color: "#748ffc", accent: "#dbe4ff", kind: "wild" },
+      { id: "sc", label: "SC", color: "#e64980", accent: "#ffdeeb", kind: "scatter" },
+    ],
   },
   {
     id: "raid",
     name: "Raid Spins",
-    blurb: "Fast rounds · gift multipliers",
+    blurb: "Fast raids · random multiplier storm",
     art: "art-raid",
-    emoji: ["🔥", "🪙", "🎯"],
+    theme: "raid",
+    symbols: [
+      { id: "fire", label: "FIRE", color: "#ff6b4a", accent: "#ffd8ce" },
+      { id: "coin", label: "COIN", color: "#ffd43b", accent: "#fff3bf" },
+      { id: "tgt", label: "TGT", color: "#fa5252", accent: "#ffe3e3" },
+      { id: "clk", label: "CLK", color: "#845ef7", accent: "#e5dbff" },
+      { id: "wd", label: "WD", color: "#20c997", accent: "#c3fae8", kind: "wild" },
+      { id: "sc", label: "SC", color: "#f06595", accent: "#ffdeeb", kind: "scatter" },
+    ],
   },
 ];
 
 const FEED = [
-  { id: 1, who: "Maya", color: "#e07a3a", text: "sent you 250 tokens", when: "2m" },
-  { id: 2, who: "Rex", color: "#3dd6c3", text: "hit a 12× on Vault Rush", when: "8m" },
-  { id: 3, who: "Keep", color: "#f0c14b", text: "Clan chest unlocked — claim soon", when: "1h" },
+  { id: 1, who: "Maya", color: "#ff6b4a", text: "hit Circuit Pad bonus round", when: "2m" },
+  { id: 2, who: "Rex", color: "#3d6bff", text: "Bet Boost → 18× storm", when: "8m" },
+  { id: 3, who: "Keep", color: "#ffb020", text: "Clan chest unlocked — claim soon", when: "1h" },
 ];
 
 const FRIENDS = [
-  { id: "m", name: "Maya", status: "Online · spinning", gift: 100 },
+  { id: "m", name: "Maya", status: "Online · Circuit Pad", gift: 100 },
   { id: "r", name: "Rex", status: "In Raid Spins", gift: 250 },
   { id: "j", name: "Jules", status: "Offline", gift: 50 },
 ];
@@ -54,19 +111,31 @@ function formatTokens(n: number) {
   return n.toLocaleString("en-US");
 }
 
+function randFace(len: number) {
+  return Math.floor(Math.random() * len);
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>("home");
   const [tokens, setTokens] = useState(12840);
   const [claimed, setClaimed] = useState(false);
   const [showBonus, setShowBonus] = useState(true);
-  const [activeGame, setActiveGame] = useState<(typeof GAMES)[0] | null>(null);
+  const [activeGame, setActiveGame] = useState<GameDef | null>(null);
   const [spinning, setSpinning] = useState(false);
-  const [reels, setReels] = useState(["🍒", "🍋", "🔔"]);
+  const [faces, setFaces] = useState<[number, number, number]>([0, 1, 2]);
+  const [highlight, setHighlight] = useState<"none" | "win" | "scatter" | "bonus">("none");
   const [winText, setWinText] = useState("");
   const [toast, setToast] = useState<string | null>(null);
+  const [betBoost, setBetBoost] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [bonusOpen, setBonusOpen] = useState(false);
+  const [bonusTitle, setBonusTitle] = useState("Bonus Round");
+  const [bonusPicks, setBonusPicks] = useState<(number | null)[]>(Array(9).fill(null));
+  const [bonusDone, setBonusDone] = useState(false);
 
   const streakDay = 4;
   const dailyReward = 500 + (streakDay - 1) * 100;
+  const stake = betBoost ? BASE_STAKE * BOOST_MULT : BASE_STAKE;
 
   useEffect(() => {
     if (!toast) return;
@@ -85,8 +154,13 @@ export default function App() {
     [],
   );
 
-  function claimBonus() {
+  function beep(fn: () => void) {
+    if (soundOn) fn();
+  }
+
+  function claimDaily() {
     if (claimed) return;
+    beep(sfx.claim);
     setTokens((v) => v + dailyReward);
     setClaimed(true);
     setShowBonus(false);
@@ -98,51 +172,165 @@ export default function App() {
       setToast("Not enough tokens");
       return;
     }
+    beep(sfx.click);
     setTokens((v) => v - amount);
     setToast(`Gifted ${amount} to ${name}`);
   }
 
+  function openGame(g: GameDef) {
+    beep(sfx.unlock);
+    beep(sfx.click);
+    setActiveGame(g);
+    setFaces([0, 1, 2]);
+    setWinText("");
+    setHighlight("none");
+    setBonusOpen(false);
+  }
+
+  function startBonus(kind: "scatter" | "heist" | "storm" | "pad") {
+    const titles = {
+      scatter: "Scatter Free-Pick",
+      heist: "Vault Heist Bonus",
+      storm: "Multiplier Storm",
+      pad: "Circuit Pad Portal",
+    };
+    setBonusTitle(titles[kind]);
+    setBonusPicks(Array(9).fill(null));
+    setBonusDone(false);
+    setBonusOpen(true);
+    setHighlight("bonus");
+    beep(sfx.bonus);
+  }
+
+  function pickBonusCell(i: number) {
+    if (bonusDone || bonusPicks[i] !== null) return;
+    const values = [50, 100, 150, 250, 400, 800, 50, 100, 1200];
+    const value = values[Math.floor(Math.random() * values.length)];
+    const next = [...bonusPicks];
+    next[i] = value;
+    setBonusPicks(next);
+    beep(sfx.click);
+
+    const revealed = next.filter((v) => v !== null).length;
+    if (revealed >= 3) {
+      const total = next.reduce<number>((sum, v) => sum + (v ?? 0), 0);
+      const boosted = betBoost ? total * 2 : total;
+      setBonusDone(true);
+      setTokens((v) => v + boosted);
+      setWinText(`Bonus banked +${boosted}`);
+      beep(sfx.winBig);
+      setTimeout(() => {
+        setBonusOpen(false);
+        setHighlight("win");
+      }, 900);
+    }
+  }
+
   function spin() {
-    if (spinning || !activeGame) return;
-    if (tokens < 50) {
-      setToast("Need 50 tokens to spin");
+    if (spinning || !activeGame || bonusOpen) return;
+    if (tokens < stake) {
+      setToast(`Need ${stake} tokens to spin`);
       return;
     }
+
+    beep(sfx.spinStart);
     setSpinning(true);
     setWinText("");
-    setTokens((v) => v - 50);
+    setHighlight("none");
+    setTokens((v) => v - stake);
 
-    const symbols = activeGame.emoji;
+    const len = activeGame.symbols.length;
     let ticks = 0;
     const id = window.setInterval(() => {
-      setReels([
-        symbols[Math.floor(Math.random() * symbols.length)],
-        symbols[Math.floor(Math.random() * symbols.length)],
-        symbols[Math.floor(Math.random() * symbols.length)],
-      ]);
+      beep(sfx.reelTick);
+      setFaces([randFace(len), randFace(len), randFace(len)]);
       ticks += 1;
-      if (ticks > 12) {
+      if (ticks > 14) {
         window.clearInterval(id);
-        const final = [
-          symbols[Math.floor(Math.random() * symbols.length)],
-          symbols[Math.floor(Math.random() * symbols.length)],
-          symbols[Math.floor(Math.random() * symbols.length)],
-        ];
-        setReels(final);
-        setSpinning(false);
-        if (final[0] === final[1] && final[1] === final[2]) {
-          const payout = 500;
-          setTokens((v) => v + payout);
-          setWinText(`JACKPOT +${payout}`);
-        } else if (final[0] === final[1] || final[1] === final[2] || final[0] === final[2]) {
-          const payout = 120;
-          setTokens((v) => v + payout);
-          setWinText(`Nice hit +${payout}`);
-        } else {
-          setWinText("No win — spin again");
-        }
+        finishSpin(activeGame);
       }
-    }, 70);
+    }, 75);
+  }
+
+  function finishSpin(game: GameDef) {
+    const len = game.symbols.length;
+    // Weighted-ish random with boost raising bonus/scatter odds
+    const rollFace = () => {
+      const r = Math.random();
+      const bonusChance = betBoost ? 0.22 : 0.11;
+      const scatterChance = betBoost ? 0.2 : 0.1;
+      if (r < bonusChance) {
+        const bonusIdx = game.symbols.findIndex((s) => s.kind === "bonus" || s.kind === "scatter");
+        if (bonusIdx >= 0 && Math.random() < 0.55) return bonusIdx;
+      }
+      if (r < bonusChance + scatterChance) {
+        const sc = game.symbols.findIndex((s) => s.kind === "scatter");
+        if (sc >= 0) return sc;
+      }
+      return randFace(len);
+    };
+
+    // Occasionally force feature for demo feel
+    const forceFeature = Math.random() < (betBoost ? 0.28 : 0.14);
+    let final: [number, number, number];
+    if (forceFeature) {
+      const sc = game.symbols.findIndex((s) => s.kind === "scatter" || s.kind === "bonus");
+      const idx = sc >= 0 ? sc : 0;
+      final = [idx, idx, randFace(len)];
+    } else {
+      final = [rollFace(), rollFace(), rollFace()];
+    }
+
+    setFaces(final);
+    setSpinning(false);
+    beep(sfx.reelStop);
+
+    const landed = final.map((i) => game.symbols[i]);
+    const scatterCount = landed.filter((s) => s.kind === "scatter" || s.kind === "bonus").length;
+    const allSame = landed[0].id === landed[1].id && landed[1].id === landed[2].id;
+    const pair =
+      landed[0].id === landed[1].id || landed[1].id === landed[2].id || landed[0].id === landed[2].id;
+    const wildAssist = landed.some((s) => s.kind === "wild") && pair;
+
+    // Random win feature independent of reels
+    const randomFeature = Math.random() < (betBoost ? 0.12 : 0.06);
+
+    if (scatterCount >= 2 || (landed.some((s) => s.kind === "bonus") && Math.random() < 0.7)) {
+      setHighlight("scatter");
+      setWinText("SCATTER / PORTAL!");
+      const kind =
+        game.id === "console" ? "pad" : game.id === "vault" ? "heist" : game.id === "raid" ? "storm" : "scatter";
+      setTimeout(() => startBonus(kind), 450);
+      return;
+    }
+
+    if (randomFeature) {
+      setHighlight("bonus");
+      setWinText("RANDOM FEATURE!");
+      setTimeout(() => startBonus(game.id === "raid" ? "storm" : "scatter"), 400);
+      return;
+    }
+
+    if (allSame || wildAssist) {
+      const payout = Math.round(stake * (allSame ? 10 : 4) * (betBoost ? 1.25 : 1));
+      setTokens((v) => v + payout);
+      setHighlight("win");
+      setWinText(allSame ? `TRIPLE HIT +${payout}` : `WILD ASSIST +${payout}`);
+      beep(sfx.winBig);
+      return;
+    }
+
+    if (pair) {
+      const payout = Math.round(stake * 2.2);
+      setTokens((v) => v + payout);
+      setHighlight("win");
+      setWinText(`LINE WIN +${payout}`);
+      beep(sfx.winSmall);
+      return;
+    }
+
+    setWinText("No win — boost for more bonus odds");
+    beep(sfx.lose);
   }
 
   return (
@@ -150,8 +338,9 @@ export default function App() {
       <div className="stage-label">
         <h1>SpinKeep</h1>
         <p>
-          Viral social slots mockup — daily streak, clans, gifts, and multiple
-          games. Tap through the phone UI.
+          Bright social-slots mockup — 3D reels, sound, Bet Boost (2× bonus chance),
+          scatters & random bonus games. Circuit Pad is an original console theme
+          (not PlayStation-licensed).
         </p>
       </div>
 
@@ -174,9 +363,21 @@ export default function App() {
                   <small>Lvl 14 · Gold Keep</small>
                 </div>
               </div>
-              <div className="wallet" aria-label="Token balance">
-                <span className="coin" />
-                <b>{formatTokens(tokens)}</b>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <button
+                  className={`chip${soundOn ? "" : " hot"}`}
+                  onClick={() => {
+                    setSoundOn((v) => !v);
+                    if (!soundOn) sfx.unlock();
+                  }}
+                  aria-label="Toggle sound"
+                >
+                  {soundOn ? "SND" : "MUTE"}
+                </button>
+                <div className="wallet" aria-label="Token balance">
+                  <span className="coin" />
+                  <b>{formatTokens(tokens)}</b>
+                </div>
               </div>
             </header>
 
@@ -190,7 +391,14 @@ export default function App() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                   >
-                    <button className="linkish" onClick={() => setActiveGame(null)}>
+                    <button
+                      className="linkish"
+                      onClick={() => {
+                        beep(sfx.click);
+                        setActiveGame(null);
+                        setBonusOpen(false);
+                      }}
+                    >
                       ← Back to lobby
                     </button>
                     <h2 className="page-title" style={{ marginTop: 8 }}>
@@ -199,37 +407,72 @@ export default function App() {
                     <p className="page-sub">{activeGame.blurb}</p>
 
                     <div className="slot-stage">
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span className="chip">Demo RTP</span>
-                        <span className="chip">Stake 50</span>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
+                        <span className="chip">3D HQ demo</span>
+                        <span className="chip hot">Stake {stake}</span>
+                        {betBoost && <span className="chip boost">Boost ON</span>}
                       </div>
-                      <div className="reels">
-                        {reels.map((symbol, i) => (
-                          <div className="reel" key={i}>
-                            <motion.span
-                              key={`${symbol}-${spinning}-${i}`}
-                              animate={spinning ? { y: [0, -8, 0] } : { y: 0 }}
-                              transition={{ repeat: spinning ? Infinity : 0, duration: 0.12 }}
-                            >
-                              {symbol}
-                            </motion.span>
-                            <div className="payline" />
-                          </div>
-                        ))}
+
+                      <div style={{ marginTop: 10 }}>
+                        <SlotScene
+                          symbols={activeGame.symbols}
+                          faces={faces}
+                          spinning={spinning}
+                          theme={activeGame.theme}
+                          highlight={highlight}
+                        />
                       </div>
+
+                      <div
+                        className={`boost-toggle${betBoost ? " on" : ""}`}
+                        onClick={() => {
+                          setBetBoost((v) => {
+                            const next = !v;
+                            if (next) beep(sfx.boostOn);
+                            else beep(sfx.click);
+                            return next;
+                          });
+                        }}
+                        role="switch"
+                        aria-checked={betBoost}
+                      >
+                        <div>
+                          <strong>Bet Boost</strong>
+                          <span>2× stake · double bonus / scatter chance</span>
+                        </div>
+                        <div className={`switch${betBoost ? " on" : ""}`}>
+                          <i />
+                        </div>
+                      </div>
+
+                      <div className="feature-row">
+                        <div className="feature-card">
+                          <strong>Scatters</strong>
+                          <span>2+ SC / PORT → free-pick bonus</span>
+                        </div>
+                        <div className="feature-card">
+                          <strong>Random win</strong>
+                          <span>Surprise heist / storm features</span>
+                        </div>
+                      </div>
+
                       <div className="spin-controls">
-                        <button className="btn btn-ghost" onClick={() => setToast("Hold coming in build")}>
+                        <button
+                          className="btn btn-ghost"
+                          onClick={() => setToast("Hold / nudge arrives in full build")}
+                        >
                           Hold
                         </button>
-                        <button className="btn btn-primary" onClick={spin} disabled={spinning}>
+                        <button className="btn btn-accent" onClick={spin} disabled={spinning || bonusOpen}>
                           {spinning ? "Spinning…" : "SPIN"}
                         </button>
                         <div className="stake">
                           Stake
-                          <b>50</b>
+                          <b>{stake}</b>
                         </div>
                       </div>
                       <div className="win-toast">{winText}</div>
+                      {activeGame.note && <p className="notice">{activeGame.note}</p>}
                     </div>
                   </motion.div>
                 ) : tab === "home" ? (
@@ -243,8 +486,8 @@ export default function App() {
                       <div className="eyebrow">Daily Keep Bonus</div>
                       <h2>{claimed ? "You’re stacked for today" : "Claim before it resets"}</h2>
                       <p>
-                        Day {streakDay} streak · come back tomorrow for a bigger
-                        drop. Miss a day, streak cools off.
+                        Day {streakDay} streak · brighter drops tomorrow. Miss a day,
+                        streak cools off.
                       </p>
                       <div className="cta-row">
                         <button
@@ -253,7 +496,13 @@ export default function App() {
                         >
                           {claimed ? "Streak safe" : `Claim ${dailyReward}`}
                         </button>
-                        <button className="btn btn-ghost" onClick={() => setTab("clan")}>
+                        <button
+                          className="btn btn-ghost"
+                          onClick={() => {
+                            beep(sfx.click);
+                            setTab("clan");
+                          }}
+                        >
                           Clan chest
                         </button>
                       </div>
@@ -268,7 +517,6 @@ export default function App() {
                         <div
                           key={d.day}
                           className={`day-pip${d.done ? " done" : ""}${d.today ? " today" : ""}`}
-                          title={d.bonus ? "Mega day" : `Day ${d.day}`}
                         >
                           {d.bonus ? "★" : d.day}
                         </div>
@@ -281,15 +529,7 @@ export default function App() {
                     </div>
                     <div className="game-rail">
                       {GAMES.map((g) => (
-                        <button
-                          key={g.id}
-                          className="game-tile"
-                          onClick={() => {
-                            setActiveGame(g);
-                            setReels(g.emoji);
-                            setWinText("");
-                          }}
-                        >
+                        <button key={g.id} className="game-tile" onClick={() => openGame(g)}>
                           <div className={`art ${g.art}`} />
                           <div className="meta">
                             <strong>{g.name}</strong>
@@ -328,18 +568,16 @@ export default function App() {
                     exit={{ opacity: 0 }}
                   >
                     <h2 className="page-title">Spin floor</h2>
-                    <p className="page-sub">Multiple cabinets, one wallet. Pick a vibe and spin.</p>
+                    <p className="page-sub">
+                      3D cabinets, sound, Bet Boost, scatters & surprise bonuses.
+                    </p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                       {GAMES.map((g) => (
                         <button
                           key={g.id}
                           className="game-tile"
-                          style={{ minHeight: 132, width: "100%" }}
-                          onClick={() => {
-                            setActiveGame(g);
-                            setReels(g.emoji);
-                            setWinText("");
-                          }}
+                          style={{ minHeight: 140, width: "100%" }}
+                          onClick={() => openGame(g)}
                         >
                           <div className={`art ${g.art}`} />
                           <div className="meta">
@@ -359,7 +597,7 @@ export default function App() {
                     exit={{ opacity: 0 }}
                   >
                     <h2 className="page-title">Your clan</h2>
-                    <p className="page-sub">Clash-style keep energy — donate, raid weekends, share chests.</p>
+                    <p className="page-sub">Donate, raid weekends, share chests — Clash energy.</p>
 
                     <div className="clan-banner">
                       <div className="badge">VK</div>
@@ -367,7 +605,14 @@ export default function App() {
                         <strong>Velvet Kings</strong>
                         <small>32 members · Clan lvl 8 · War ready</small>
                       </div>
-                      <button className="btn btn-ghost" style={{ padding: "8px 10px" }} onClick={() => setToast("Invite link copied")}>
+                      <button
+                        className="btn btn-ghost"
+                        style={{ padding: "8px 10px" }}
+                        onClick={() => {
+                          beep(sfx.click);
+                          setToast("Invite link copied");
+                        }}
+                      >
                         Invite
                       </button>
                     </div>
@@ -392,23 +637,23 @@ export default function App() {
                     </div>
                     <div className="feed">
                       <div className="feed-item">
-                        <div className="avatar" style={{ background: "#f0c14b" }}>
+                        <div className="avatar" style={{ background: "#ffb020" }}>
                           ★
                         </div>
                         <div>
                           <p>
-                            <b>Weekend raid</b> — members spin Vault Rush for shared loot
+                            <b>Weekend raid</b> — Circuit Pad portal spins for shared loot
                           </p>
                           <time>Ends in 1d 4h</time>
                         </div>
                       </div>
                       <div className="feed-item">
-                        <div className="avatar" style={{ background: "#3dd6c3" }}>
+                        <div className="avatar" style={{ background: "#3d6bff" }}>
                           ⇪
                         </div>
                         <div>
                           <p>
-                            <b>Donation board</b> — top gifters unlock cosmetic banners
+                            <b>Donation board</b> — top gifters unlock banners
                           </p>
                           <time>Resets Monday</time>
                         </div>
@@ -424,13 +669,13 @@ export default function App() {
                     exit={{ opacity: 0 }}
                   >
                     <h2 className="page-title">Friends & gifts</h2>
-                    <p className="page-sub">Send tokens to pull friends back online. Caps stop abuse.</p>
+                    <p className="page-sub">Send tokens to pull friends back. Caps stop abuse.</p>
 
                     <div className="gift-list">
                       {FRIENDS.map((f) => (
                         <div className="gift-row" key={f.id}>
                           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                            <div className="avatar" style={{ background: "#234" }}>
+                            <div className="avatar" style={{ background: "#3d6bff" }}>
                               {f.name.slice(0, 1)}
                             </div>
                             <div>
@@ -438,7 +683,11 @@ export default function App() {
                               <span>{f.status}</span>
                             </div>
                           </div>
-                          <button className="btn btn-primary" style={{ padding: "8px 12px" }} onClick={() => sendGift(f.gift, f.name)}>
+                          <button
+                            className="btn btn-accent"
+                            style={{ padding: "8px 12px" }}
+                            onClick={() => sendGift(f.gift, f.name)}
+                          >
                             Gift {f.gift}
                           </button>
                         </div>
@@ -454,7 +703,11 @@ export default function App() {
                         <strong>Buy packs</strong>
                         <small>IAP placeholder — App Store / Play only</small>
                       </div>
-                      <button className="btn btn-ghost" style={{ padding: "8px 10px" }} onClick={() => setToast("Purchases come in phase 2")}>
+                      <button
+                        className="btn btn-ghost"
+                        style={{ padding: "8px 10px" }}
+                        onClick={() => setToast("Purchases come in phase 2")}
+                      >
                         Soon
                       </button>
                     </div>
@@ -469,7 +722,10 @@ export default function App() {
                   <button
                     key={item.id}
                     className={`nav-btn${tab === item.id ? " active" : ""}`}
-                    onClick={() => setTab(item.id)}
+                    onClick={() => {
+                      beep(sfx.click);
+                      setTab(item.id);
+                    }}
                   >
                     <span className="ico">{item.ico}</span>
                     {item.label}
@@ -495,8 +751,7 @@ export default function App() {
                     <div className="reward-burst">+{dailyReward}</div>
                     <h2>Daily Keep Bonus</h2>
                     <p>
-                      Streak day {streakDay}. Claim now, then come back tomorrow —
-                      day 7 drops a mega chest.
+                      Streak day {streakDay}. Claim now — day 7 drops a mega chest.
                     </p>
                     <div className="streak-row" style={{ marginBottom: 16 }}>
                       {STREAK.map((d) => (
@@ -508,7 +763,7 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <button className="btn btn-primary" style={{ width: "100%" }} onClick={claimBonus}>
+                    <button className="btn btn-accent" style={{ width: "100%" }} onClick={claimDaily}>
                       Claim {dailyReward} tokens
                     </button>
                     <button
@@ -518,6 +773,44 @@ export default function App() {
                     >
                       Later
                     </button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {bonusOpen && (
+                <motion.div
+                  className="modal-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <motion.div
+                    className="modal bonus-modal"
+                    initial={{ y: 40, opacity: 0, scale: 0.96 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ y: 24, opacity: 0 }}
+                  >
+                    <h2>{bonusTitle}</h2>
+                    <p>Pick 3 tiles. Bet Boost doubles the banked total.</p>
+                    <div className="pick-grid">
+                      {bonusPicks.map((v, i) => (
+                        <button
+                          key={i}
+                          className={`pick-cell${v !== null ? " revealed" : ""}`}
+                          onClick={() => pickBonusCell(i)}
+                          disabled={bonusDone}
+                        >
+                          {v === null ? "?" : v}
+                        </button>
+                      ))}
+                    </div>
+                    {bonusDone && (
+                      <button className="btn btn-blue" style={{ width: "100%" }} onClick={() => setBonusOpen(false)}>
+                        Back to reels
+                      </button>
+                    )}
                   </motion.div>
                 </motion.div>
               )}
@@ -538,10 +831,11 @@ export default function App() {
                     textAlign: "center",
                     padding: "10px 12px",
                     borderRadius: 12,
-                    background: "rgba(5,12,16,0.92)",
-                    border: "1px solid rgba(240,193,75,0.35)",
+                    background: "rgba(255,255,255,0.94)",
+                    border: "1px solid rgba(255,107,74,0.35)",
                     fontSize: "0.82rem",
-                    fontWeight: 600,
+                    fontWeight: 700,
+                    boxShadow: "0 10px 24px rgba(40,60,100,0.12)",
                   }}
                 >
                   {toast}
@@ -553,11 +847,11 @@ export default function App() {
       </div>
 
       <div className="legend">
-        <span>Daily streak claim</span>
-        <span>Clans / keeps</span>
-        <span>Friends & gifts</span>
-        <span>Multi-game lobby</span>
-        <span>IAP placeholder</span>
+        <span>Bright UI</span>
+        <span>3D reels + SFX</span>
+        <span>Bet Boost</span>
+        <span>Scatter / random bonuses</span>
+        <span>Circuit Pad (original)</span>
       </div>
     </div>
   );
